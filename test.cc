@@ -81,9 +81,9 @@ void cross_validation(gsl_matrix * m, size_t splits) {
     else
       rows = m->size1/splits;
     cols = m->size2;
-    m_temp = gsl_matrix_alloc(rows, cols); // allocate
-    gsl_matrix_set_zero(m_temp);           // zero it out
-    matrices.push_back(*m_temp);           // add it to the vector
+    m_temp = gsl_matrix_alloc(rows, cols);  // allocate
+    gsl_matrix_set_zero(m_temp);            // zero it out
+    matrices.push_back(*m_temp);            // add it to the vector
   }
 
   // Now let's loop through our matrices and populate them
