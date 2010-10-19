@@ -70,30 +70,43 @@ void cross_validation(gsl_matrix * m, size_t splits) {
   vector<gsl_matrix> matrices;
   int rows, cols;
   gsl_matrix *m_temp;
+  // We create a vector of matrices to dump our rows into
   for (size_t i = 0; i < splits; ++i) {
     if (i < m->size1 % splits)
+      // Some matrices have an extra row, e.g. If our original matrix
+      // has 10 rows but we want 3 splits, 10/3 = 3 remainder 1
+      // So two matrices will have three rows, but one matrix will
+      // have an extra row
       rows = m->size1/splits + 1;
     else
       rows = m->size1/splits;
     cols = m->size2;
-    m_temp = gsl_matrix_alloc(rows, cols);
-    gsl_matrix_set_zero(m_temp);
-    matrices.push_back(*m_temp);
+    m_temp = gsl_matrix_alloc(rows, cols); // allocate
+    gsl_matrix_set_zero(m_temp);           // zero it out
+    matrices.push_back(*m_temp);           // add it to the vector
   }
 
+  // Now let's loop through our matrices and populate them
+  // ((j*splits) < m->size1) is to handle the case of extra rows
   for (size_t j = 0; (j <= rows) && ((j*splits) < m->size1); ++j) {
     vector<gsl_vector> row_vector;
+    // Scoop up some rows from the original matrix
+    // ((i + j*splits) < m->size1) is to handle the case of extra rows
     for (size_t i = 0; (i < splits) && ((i + j*splits) < m->size1); ++i) {
       gsl_vector *a_single_row = gsl_vector_alloc(cols);
       gsl_matrix_get_row(a_single_row, m, i + j*splits);
       row_vector.push_back(*a_single_row);
     }
+    // Shuffle up those rows that we just scooped up
     random_shuffle(row_vector.begin(), row_vector.end());
+    // Now spread those rows evenly across our new matrices
+    // ((i + j*splits) < m->size1) is to handle the case of extra rows
     for (size_t i = 0; (i < splits) && ((i + j*splits) < m->size1); ++i) {
       gsl_matrix_set_row(&matrices[i], j, &row_vector[i]);
     }
   }
 
+  // Now let's print our new matrices out
   vector<gsl_matrix>::iterator it = matrices.begin();
   FOREACH(it, matrices) {
     printf("\nMatrix\n");
