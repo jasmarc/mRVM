@@ -11,8 +11,15 @@
 #include <functional>
 #include <iterator>
 #include <iomanip>
+#include <vector>
+
+#define FOREACH(m_itname, m_container) \
+        for (typeof(m_container.begin()) m_itname = m_container.begin(); \
+        m_itname != m_container.end(); \
+        m_itname++ )
 
 using std::set;
+using std::vector;
 
 void print_sub_matrix(gsl_matrix * m,
     size_t k1,
@@ -57,32 +64,41 @@ void sphere_matrix(gsl_matrix * m) {
 }
 
 void cross_validation(gsl_matrix * m, size_t splits) {
-  const gsl_rng_type * T;
-  gsl_rng * r;
-  set<size_t> myset;
+  printf("initial matrix:\n");
+  print_matrix(m);
 
-  // Setup random number generator
-  gsl_rng_env_setup();
-  T = gsl_rng_default;
-  r = gsl_rng_alloc(T);
-
-  while (myset.size() < splits) {
-    float rand = gsl_ran_flat(r, 0 + 1, m->size1 - 1);
-    int split = static_cast<int>(rand + 0.5);
-    myset.insert(split);
+  vector<gsl_matrix> matrices;
+  int rows, cols;
+  gsl_matrix *m_temp;
+  for (size_t i = 0; i < splits; ++i) {
+    if (i < m->size1 % splits)
+      rows = m->size1/splits + 1;
+    else
+      rows = m->size1/splits;
+    cols = m->size2;
+    m_temp = gsl_matrix_alloc(rows, cols);
+    gsl_matrix_set_zero(m_temp);
+    matrices.push_back(*m_temp);
   }
 
-  // y, x, height, width
-  int previous = 0;
-  for (set<size_t>::const_iterator iter = myset.begin();
-      iter != myset.end();
-      ++iter) {
-    print_sub_matrix(m, previous, 0, *iter - previous, m->size2 - 1);
-    previous = *iter;
+  for (size_t j = 0; (j <= rows) && ((j*splits) < m->size1); ++j) {
+    vector<gsl_vector> row_vector;
+    for (size_t i = 0; (i < splits) && ((i + j*splits) < m->size1); ++i) {
+      gsl_vector *a_single_row = gsl_vector_alloc(cols);
+      gsl_matrix_get_row(a_single_row, m, i + j*splits);
+      row_vector.push_back(*a_single_row);
+    }
+    random_shuffle(row_vector.begin(), row_vector.end());
+    for (size_t i = 0; (i < splits) && ((i + j*splits) < m->size1); ++i) {
+      gsl_matrix_set_row(&matrices[i], j, &row_vector[i]);
+    }
   }
-  print_sub_matrix(m, previous, 0, m->size1 - previous, m->size2 - 1);
 
-  gsl_rng_free(r);
+  vector<gsl_matrix>::iterator it = matrices.begin();
+  FOREACH(it, matrices) {
+    printf("\nMatrix\n");
+    print_matrix(&(*it));
+  }
 }
 
 TEST(MRVMTest, submatrix) {
@@ -136,13 +152,33 @@ TEST(MRVMTest, cross_validation) {
   // read matrix from file
   int rows, cols;
   FILE *f;
-  f = fopen("test.dat", "r");
+  f = fopen("test2.dat", "r");
   fscanf(f, "%d %d", &rows, &cols);
   mm = gsl_matrix_alloc(rows, cols);
   gsl_matrix_fscanf(f, mm);
   fclose(f);
 
-  cross_validation(mm, 2);
+  cross_validation(mm, 6);
 
   gsl_matrix_free(mm);
+}
+
+TEST(MRVMTest, shuffle) {
+  vector<int> vec;
+  int values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  for (size_t i = 0; i < 10; ++i) {
+    vec.push_back(values[i]);
+  }
+  for (vector<int>::iterator iter = vec.begin();
+      iter != vec.end();
+      ++iter) {
+    printf("%d\n", *iter);
+  }
+  printf("\nNow Random:\n");
+  random_shuffle(vec.begin(), vec.end());
+  for (vector<int>::iterator iter = vec.begin();
+      iter != vec.end();
+      ++iter) {
+    printf("%d\n", *iter);
+  }
 }
