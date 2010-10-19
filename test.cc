@@ -171,7 +171,7 @@ TEST(MRVMTest, cross_validation) {
   gsl_matrix_fscanf(f, mm);
   fclose(f);
 
-  cross_validation(mm, 6);
+  cross_validation(mm, 3);
 
   gsl_matrix_free(mm);
 }
