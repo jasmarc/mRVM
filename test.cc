@@ -6,9 +6,12 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl_blas.h>
 #include <list>
 #include <algorithm>
 #include <functional>
+#include <stdio.h>
+#include <stdarg.h>
 #include <iterator>
 #include <iomanip>
 #include <vector>
@@ -194,4 +197,23 @@ TEST(MRVMTest, shuffle) {
       ++iter) {
     printf("%d\n", *iter);
   }
+}
+
+TEST(MRVMTest, inner_product) {
+  gsl_vector *v1 = gsl_vector_alloc (5);
+  gsl_vector *v2 = gsl_vector_alloc (5);
+  for(size_t i = 0; i < 5; ++i) {
+    gsl_vector_set (v1, i, 1.23 + i);
+    gsl_vector_set (v2, i, 2.23 + i*0.3);
+  }
+  printf("vector1:\n");
+  gsl_vector_fprintf (stdout, v1, "%.5g");
+  printf("vector2:\n");
+  gsl_vector_fprintf (stdout, v2, "%.5g");
+  printf("vector product\n");
+  double result;
+  gsl_blas_ddot(v1, v2, &result);
+  printf("%f\n", result);
+  gsl_vector_free (v1);
+  gsl_vector_free (v2);
 }
