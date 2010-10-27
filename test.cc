@@ -7,11 +7,11 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl_blas.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include <list>
 #include <algorithm>
 #include <functional>
-#include <stdio.h>
-#include <stdarg.h>
 #include <iterator>
 #include <iomanip>
 #include <vector>
@@ -24,7 +24,7 @@
 using std::set;
 using std::vector;
 
-void print_sub_matrix(gsl_matrix * m,
+void PrintSubMatrix(gsl_matrix * m,
     size_t k1,
     size_t k2,
     size_t n1,
@@ -39,16 +39,23 @@ void print_sub_matrix(gsl_matrix * m,
   }
 }
 
-void print_matrix(gsl_matrix * m) {
-  for (size_t  i = 0; i < m->size1; i++) {
-    for (size_t j = 0; j < m->size2; j++) {
+void PrintMatrix(gsl_matrix * m) {
+  for (size_t j = 0; j < m->size2; ++j) {
+    for (size_t  i = 0; i < m->size1; ++i) {
       printf("%.2f ", gsl_matrix_get(m, i, j));
     }
     printf("\n");
   }
 }
 
-void sphere_matrix(gsl_matrix * m) {
+void PrintVector(gsl_vector * v) {
+  for (size_t j = 0; j < v->size; j++) {
+    printf("%.2f ", gsl_vector_get(v, j));
+  }
+  printf("\n");
+}
+
+void SphereMatrix(gsl_matrix * m) {
   gsl_vector *v;
   v = gsl_vector_alloc(m->size2);
   for (size_t i = 0; i < m->size1; ++i) {
@@ -66,12 +73,12 @@ void sphere_matrix(gsl_matrix * m) {
   gsl_vector_free(v);
 }
 
-void cross_validation(gsl_matrix * m, size_t splits) {
+void CrossValidation(gsl_matrix * m, size_t splits) {
   printf("initial matrix:\n");
-  print_matrix(m);
+  PrintMatrix(m);
 
   vector<gsl_matrix> matrices;
-  int rows, cols;
+  size_t rows, cols;
   gsl_matrix *m_temp;
   // We create a vector of matrices to dump our rows into
   for (size_t i = 0; i < splits; ++i) {
@@ -113,9 +120,52 @@ void cross_validation(gsl_matrix * m, size_t splits) {
   vector<gsl_matrix>::iterator it = matrices.begin();
   FOREACH(it, matrices) {
     printf("\nMatrix\n");
-    print_matrix(&(*it));
+    PrintMatrix(&(*it));
   }
 }
+
+gsl_matrix * DiagAlloc(gsl_vector * v) {
+    gsl_matrix *mat = gsl_matrix_alloc(v->size, v->size);
+    gsl_vector_view diag = gsl_matrix_diagonal(mat);
+    gsl_matrix_set_all(mat, 0.0);
+    gsl_vector_memcpy(&diag.vector, v);
+    return mat;
+}
+
+gsl_matrix * CreateMatrix(double * arr, size_t size1, size_t size2) {
+  gsl_matrix *m = gsl_matrix_alloc(size1, size2);
+  for (size_t j = 0; j < size2; ++j) {
+    for (size_t i = 0; i < size1; ++i) {
+      gsl_matrix_set(m, i, j, *(arr + i + j*size2));
+    }
+  }
+  return m;
+}
+
+gsl_vector * CreateVector(double * arr, size_t size) {
+  gsl_vector *v = gsl_vector_alloc(size);
+  for (size_t i = 0; i < size; ++i) {
+    gsl_vector_set(v, i, arr[i]);
+  }
+  return v;
+}
+
+void MultiplyMatrix(double *a, unsigned int aheight, unsigned int awidth,
+                    double *b, unsigned int bwidth, double *c) {
+    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, aheight, bwidth,
+                awidth, 1.0f, a, aheight, b, awidth, 0.0f, c, aheight);
+}
+
+gsl_vector * MultiplyVecMat(gsl_vector *v, gsl_matrix *m) {
+  gsl_vector *result = gsl_vector_calloc(v->size);
+  MultiplyMatrix(v->data, 1, v->size, m->data, m->size2, result->data);
+  return result;
+}
+
+// void gaussian_kernel(gsl_vector *v1, gsl_vector *v2, gsl_vector *t) {
+//   gsl_vector_sub(v1, v2);
+//   gsl_matrix * phi = DiagAlloc(t);
+// }
 
 TEST(MRVMTest, submatrix) {
   gsl_matrix *mm;
@@ -132,8 +182,8 @@ TEST(MRVMTest, submatrix) {
   // y, x, height, width
   gsl_matrix_view sub = gsl_matrix_submatrix(mm, 8, 1, 2, 2);
   printf("matrix\n");
-  print_matrix(mm);
-  print_sub_matrix(mm, 8, 1, 2, 2);
+  PrintMatrix(mm);
+  PrintSubMatrix(mm, 8, 1, 2, 2);
 
   gsl_matrix_free(mm);
 }
@@ -152,17 +202,17 @@ TEST(MRVMTest, sphering) {
 
   // print
   printf("rows: %zu cols: %zu\n", mm->size1, mm->size2);
-  print_matrix(mm);
+  PrintMatrix(mm);
 
   // sphere and print
-  sphere_matrix(mm);
+  SphereMatrix(mm);
   printf("\nSphered:\n");
-  print_matrix(mm);
+  PrintMatrix(mm);
 
   gsl_matrix_free(mm);
 }
 
-TEST(MRVMTest, cross_validation) {
+TEST(MRVMTest, CrossValidation) {
   gsl_matrix *mm;
 
   // read matrix from file
@@ -174,7 +224,7 @@ TEST(MRVMTest, cross_validation) {
   gsl_matrix_fscanf(f, mm);
   fclose(f);
 
-  cross_validation(mm, 3);
+  CrossValidation(mm, 3);
 
   gsl_matrix_free(mm);
 }
@@ -200,20 +250,64 @@ TEST(MRVMTest, shuffle) {
 }
 
 TEST(MRVMTest, inner_product) {
-  gsl_vector *v1 = gsl_vector_alloc (5);
-  gsl_vector *v2 = gsl_vector_alloc (5);
-  for(size_t i = 0; i < 5; ++i) {
-    gsl_vector_set (v1, i, 1.23 + i);
-    gsl_vector_set (v2, i, 2.23 + i*0.3);
+  gsl_vector *v1 = gsl_vector_alloc(5);
+  gsl_vector *v2 = gsl_vector_alloc(5);
+  for (size_t i = 0; i < 5; ++i) {
+    gsl_vector_set(v1, i, 1.23 + i);
+    gsl_vector_set(v2, i, 2.23 + i*0.3);
   }
   printf("vector1:\n");
-  gsl_vector_fprintf (stdout, v1, "%.5g");
+  gsl_vector_fprintf(stdout, v1, "%.5g");
   printf("vector2:\n");
-  gsl_vector_fprintf (stdout, v2, "%.5g");
+  gsl_vector_fprintf(stdout, v2, "%.5g");
   printf("vector product\n");
   double result;
   gsl_blas_ddot(v1, v2, &result);
   printf("%f\n", result);
-  gsl_vector_free (v1);
-  gsl_vector_free (v2);
+  gsl_vector_free(v1);
+  gsl_vector_free(v2);
+}
+
+TEST(MRVMTest, gaussian_kernel) {
+  double A[] = { 0.11, 0.12, 0.13 };
+  gsl_vector *v1 = gsl_vector_alloc(3);
+  for (size_t i = 0; i < 3; ++i) {
+    gsl_vector_set(v1, i, A[i]);
+  }
+
+  double B[] = { 1011, 1012, 1013,
+                 1021, 1022, 1023,
+                 1031, 1032, 1033 };
+
+  gsl_vector *v2 = gsl_vector_calloc(3);
+
+    /* Compute C = A B */
+
+  MultiplyMatrix(v1->data, 1, 3, B, 3, v2->data);
+
+  printf("[ %g, %g, %g\n", v2->data[0], v2->data[1], v2->data[3]);
+}
+
+TEST(MRVMTest, diagonal) {
+  double v[] = {1, 2, 3};
+  gsl_vector *v1 = CreateVector(v, 3);
+  printf("Original Vector\n");
+  PrintVector(v1);
+  printf("Diagonal Matrix\n");
+  PrintMatrix(DiagAlloc(v1));
+}
+
+TEST(MRMVTest, mul_vec_mat) {
+  double v_arr[] = { 1, 2 };
+  double m_arr[] = { 1, 2,
+                     3, 4 };
+  gsl_vector *v = CreateVector(v_arr, 2);
+  gsl_matrix *m = CreateMatrix(m_arr, 2, 2);
+  printf("vector:\n");
+  PrintVector(v);
+  printf("matrix:\n");
+  PrintMatrix(m);
+  gsl_vector *result = MultiplyVecMat(v, m);
+  printf("result:\n");
+  PrintVector(result);
 }
