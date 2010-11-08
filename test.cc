@@ -6,6 +6,7 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_sf_exp.h>
 #include <gsl_blas.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -162,10 +163,35 @@ gsl_vector * MultiplyVecMat(gsl_vector *v, gsl_matrix *m) {
   return result;
 }
 
-// void gaussian_kernel(gsl_vector *v1, gsl_vector *v2, gsl_vector *t) {
-//   gsl_vector_sub(v1, v2);
-//   gsl_matrix * phi = DiagAlloc(t);
-// }
+gsl_vector * MultiplyMatVec(gsl_matrix *m, gsl_vector *v) {
+  gsl_vector *result = gsl_vector_calloc(v->size);
+  MultiplyMatrix(m->data, m->size1, m->size2, v->data, 1, result->data);
+  return result;
+}
+
+double MultiplyVecVec(gsl_vector *v1, gsl_vector *v2) {
+  double result;
+  gsl_blas_ddot(v1, v2, &result);
+  return result;
+}
+
+double LinearKernel(gsl_vector *v1, gsl_vector *v2) {
+  return MultiplyVecVec(v1, v2);
+}
+
+double PolynomialKernel(gsl_vector *v1, gsl_vector *v2, double d) {
+  return pow((MultiplyVecVec(v1, v2) + 1), d);
+}
+
+double GaussianKernel(gsl_vector *v1, gsl_vector *v2, gsl_vector *t) {
+  double result;
+  gsl_matrix *m = DiagAlloc(t);
+  gsl_vector_sub(v1, v2);
+  gsl_vector *v1m = MultiplyVecMat(v1, m);
+  result = MultiplyVecVec(v1m, v1);
+  result = gsl_sf_exp(result);
+  return result;
+}
 
 TEST(MRVMTest, submatrix) {
   gsl_matrix *mm;
@@ -268,24 +294,33 @@ TEST(MRVMTest, inner_product) {
   gsl_vector_free(v2);
 }
 
+TEST(MRVMTest, linear_kernel) {
+  double v1_arr[] = { 1, 2 };
+  double v2_arr[] = { 2, 3 };
+  gsl_vector *v1 = CreateVector(v1_arr, 2);
+  gsl_vector *v2 = CreateVector(v2_arr, 2);
+  double answer = LinearKernel(v1, v2);
+  ASSERT_EQ(8, answer);
+}
+
+TEST(MRVMTest, polynomial_kernel) {
+  double v1_arr[] = { 1, 2 };
+  double v2_arr[] = { 4, 3 };
+  gsl_vector *v1 = CreateVector(v1_arr, 2);
+  gsl_vector *v2 = CreateVector(v2_arr, 2);
+  double answer = PolynomialKernel(v1, v2, 2);
+  ASSERT_EQ(121, answer);
+}
+
 TEST(MRVMTest, gaussian_kernel) {
-  double A[] = { 0.11, 0.12, 0.13 };
-  gsl_vector *v1 = gsl_vector_alloc(3);
-  for (size_t i = 0; i < 3; ++i) {
-    gsl_vector_set(v1, i, A[i]);
-  }
-
-  double B[] = { 1011, 1012, 1013,
-                 1021, 1022, 1023,
-                 1031, 1032, 1033 };
-
-  gsl_vector *v2 = gsl_vector_calloc(3);
-
-    /* Compute C = A B */
-
-  MultiplyMatrix(v1->data, 1, 3, B, 3, v2->data);
-
-  printf("[ %g, %g, %g\n", v2->data[0], v2->data[1], v2->data[3]);
+  double v1_arr[] = { 1, 2 };
+  double v2_arr[] = { 4, 3 };
+  double v3_arr[] = { 1, 2 };
+  gsl_vector *v1 = CreateVector(v1_arr, 2);
+  gsl_vector *v2 = CreateVector(v2_arr, 2);
+  gsl_vector *v3 = CreateVector(v3_arr, 2);
+  double answer = GaussianKernel(v1, v2, v3);
+  ASSERT_EQ(59874.141715197817, answer);
 }
 
 TEST(MRVMTest, diagonal) {
@@ -308,6 +343,9 @@ TEST(MRMVTest, mul_vec_mat) {
   printf("matrix:\n");
   PrintMatrix(m);
   gsl_vector *result = MultiplyVecMat(v, m);
-  printf("result:\n");
+  printf("result1:\n");
+  PrintVector(result);
+  printf("result2:\n");
+  result = MultiplyMatVec(m, v);
   PrintVector(result);
 }
