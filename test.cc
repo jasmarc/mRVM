@@ -29,13 +29,13 @@ int NumberOfRows(FILE *f) {
   char lastChar = '\n';
   char currentChar = NULL;
   int count = 0;
-  while ((currentChar=fgetc(f))!=EOF) {
-    if(lastChar == '\n' && currentChar != '\n') {
+  while ((currentChar=fgetc(f)) != EOF) {
+    if (lastChar == '\n' && currentChar != '\n') {
       ++count;
     }
     lastChar = currentChar;
   }
-  fseek(f,0,SEEK_SET);
+  fseek(f, 0, SEEK_SET);
   return count;
 }
 
@@ -43,13 +43,13 @@ int NumberOfColumns(FILE *f) {
   char lastChar = ' ';
   char currentChar = NULL;
   int count = 0;
-  while ((currentChar=fgetc(f))!='\n') {
-    if(isspace(lastChar) && !isspace(currentChar)) {
+  while ((currentChar=fgetc(f)) != '\n') {
+    if (isspace(lastChar) && !isspace(currentChar)) {
       ++count;
     }
     lastChar = currentChar;
   }
-  fseek(f,0,SEEK_SET);
+  fseek(f, 0, SEEK_SET);
   return count;
 }
 
@@ -61,7 +61,7 @@ void ReadMatrix(const char *filename, gsl_matrix ** m) {
   cols = NumberOfColumns(f);
   *m = gsl_matrix_alloc(rows, cols);
   gsl_matrix_fscanf(f, *m);
-  fclose(f);  
+  fclose(f);
 }
 
 void PrintSubMatrix(gsl_matrix * m,
@@ -172,17 +172,17 @@ gsl_matrix * DiagAlloc(gsl_vector * v) {
     return mat;
 }
 
-gsl_matrix * RepMatHorizAlloc(gsl_vector * v) {
-    gsl_matrix *mat = gsl_matrix_alloc(v->size, v->size);
-    for (size_t i = 0; i < v->size; ++i) {
+gsl_matrix * RepMatHorizAlloc(gsl_vector * v, size_t k) {
+    gsl_matrix *mat = gsl_matrix_alloc(k, v->size);
+    for (size_t i = 0; i < k; ++i) {
       gsl_matrix_set_row(mat, i, v);
     }
     return mat;
 }
 
-gsl_matrix * RepMatVertAlloc(gsl_vector * v) {
-    gsl_matrix *mat = gsl_matrix_alloc(v->size, v->size);
-    for (size_t i = 0; i < v->size; ++i) {
+gsl_matrix * RepMatVertAlloc(gsl_vector * v, size_t k) {
+    gsl_matrix *mat = gsl_matrix_alloc(v->size, k);
+    for (size_t i = 0; i < k; ++i) {
       gsl_matrix_set_col(mat, i, v);
     }
     return mat;
@@ -190,9 +190,9 @@ gsl_matrix * RepMatVertAlloc(gsl_vector * v) {
 
 gsl_matrix * CreateMatrix(double * arr, size_t size1, size_t size2) {
   gsl_matrix *m = gsl_matrix_alloc(size1, size2);
-  for (size_t j = 0; j < size2; ++j) {
-    for (size_t i = 0; i < size1; ++i) {
-      gsl_matrix_set(m, i, j, *(arr + i + j*size2));
+  for (size_t i = 0; i < size1; ++i) {
+    for (size_t j = 0; j < size2; ++j) {
+      gsl_matrix_set(m, i, j, *(arr + i*size2 + j));
     }
   }
   return m;
@@ -206,21 +206,41 @@ gsl_vector * CreateVector(double * arr, size_t size) {
   return v;
 }
 
-void MultiplyMatrix(double *a, unsigned int aheight, unsigned int awidth,
-                    double *b, unsigned int bwidth, double *c) {
-    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, aheight, bwidth,
-                awidth, 1.0f, a, aheight, b, awidth, 0.0f, c, aheight);
-}
-
 gsl_vector * MultiplyVecMat(gsl_vector *v, gsl_matrix *m) {
   gsl_vector *result = gsl_vector_calloc(v->size);
-  MultiplyMatrix(v->data, 1, v->size, m->data, m->size2, result->data);
+  cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
+              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
+              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransB
+              1,               // const int M
+              m->size2,        // const int N
+              v->size,         // const int K
+              1.0f,            // const double alpha
+              v->data,         // const double * A
+              v->size,         // const int lda
+              m->data,         // const double * B
+              m->size2,        // const int ldb
+              0.0f,            // const double beta
+              result->data,    // double * C
+              result->size);   // const int ldc
   return result;
 }
 
 gsl_vector * MultiplyMatVec(gsl_matrix *m, gsl_vector *v) {
   gsl_vector *result = gsl_vector_calloc(v->size);
-  MultiplyMatrix(m->data, m->size1, m->size2, v->data, 1, result->data);
+  cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
+              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
+              CblasTrans ,     // const enum CBLAS_TRANSPOSE TransB
+              m->size1,        // const int M (height of A)
+              v->size,         // const int N (width of B)
+              m->size2,        // const int K (width of A)
+              1.0f,            // const double alpha
+              m->data,         // const double * A
+              m->size2,        // const int lda
+              v->data,         // const double * B
+              v->size,         // const int ldb
+              0.0f,            // const double beta
+              result->data,    // double * C
+              1);              // const int ldc
   return result;
 }
 
@@ -230,12 +250,34 @@ double MultiplyVecVec(gsl_vector *v1, gsl_vector *v2) {
   return result;
 }
 
+gsl_matrix * MultiplyMatMat(gsl_matrix *m1, gsl_matrix *m2) {
+  gsl_matrix *result = gsl_matrix_alloc(m1->size1, m2->size1);
+  cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
+              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
+              CblasTrans ,     // const enum CBLAS_TRANSPOSE TransB
+              m1->size1,       // const int M
+              m2->size1,       // const int N
+              m1->size2,       // const int K
+              1.0f,            // const double alpha
+              m1->data,        // const double * A
+              m1->size2,       // const int lda
+              m2->data,        // const double * B
+              m2->size2,       // const int ldb
+              0.0f,            // const double beta
+              result->data,    // double * C
+              result->size2);  // const int ldc
+  return result;
+}
+
 double LinearKernel(gsl_vector *v1, gsl_vector *v2) {
   return MultiplyVecVec(v1, v2);
 }
 
 double StandardizedLinearKernel(gsl_vector *v1, gsl_vector *v2) {
-  return LinearKernel(v1, v2)/(sqrt(LinearKernel(v1, v1))*sqrt(LinearKernel(v2, v2)));
+  float kernel = LinearKernel(v1, v2);
+  float root1 = sqrt(LinearKernel(v1, v1));
+  float root2 = sqrt(LinearKernel(v2, v2));
+  return kernel/(root1*root2);
 }
 
 double PolynomialKernel(gsl_vector *v1, gsl_vector *v2, double d) {
@@ -243,7 +285,10 @@ double PolynomialKernel(gsl_vector *v1, gsl_vector *v2, double d) {
 }
 
 double StandardizedPolynomialKernel(gsl_vector *v1, gsl_vector *v2, double d) {
-  return PolynomialKernel(v1, v2, d)/(sqrt(PolynomialKernel(v1, v1, d))*sqrt(PolynomialKernel(v2, v2, d)));
+  float kernel = PolynomialKernel(v1, v2, d);
+  float root1 = sqrt(PolynomialKernel(v1, v1, d));
+  float root2 = sqrt(PolynomialKernel(v2, v2, d));
+  return kernel/(root1*root2);
 }
 
 double GaussianKernel(gsl_vector *v1, gsl_vector *v2, gsl_vector *t) {
@@ -259,14 +304,7 @@ double GaussianKernel(gsl_vector *v1, gsl_vector *v2, gsl_vector *t) {
 TEST(MRVMTest, submatrix) {
   gsl_matrix *mm;
 
-  // read matrix from file
-  int rows, cols;
-  FILE *f;
-  f = fopen("test.dat", "r");
-  fscanf(f, "%d %d", &rows, &cols);
-  mm = gsl_matrix_alloc(rows, cols);
-  gsl_matrix_fscanf(f, mm);
-  fclose(f);
+  ReadMatrix("test.dat", &mm);
 
   // y, x, height, width
   gsl_matrix_view sub = gsl_matrix_submatrix(mm, 8, 1, 2, 2);
@@ -280,14 +318,7 @@ TEST(MRVMTest, submatrix) {
 TEST(MRVMTest, sphering) {
   gsl_matrix *mm;
 
-  // read matrix from file
-  int rows, cols;
-  FILE *f;
-  f = fopen("test.dat", "r");
-  fscanf(f, "%d %d", &rows, &cols);
-  mm = gsl_matrix_alloc(rows, cols);
-  gsl_matrix_fscanf(f, mm);
-  fclose(f);
+  ReadMatrix("test.dat", &mm);
 
   // print
   printf("rows: %zu cols: %zu\n", mm->size1, mm->size2);
@@ -422,9 +453,9 @@ TEST(MRVMTest, repmat) {
   printf("Original Vector\n");
   PrintVector(v1);
   printf("Horiz Repmat Matrix\n");
-  PrintMatrix(RepMatHorizAlloc(v1));
+  PrintMatrix(RepMatHorizAlloc(v1, 7));
   printf("Vert Repmat Matrix\n");
-  PrintMatrix(RepMatVertAlloc(v1));
+  PrintMatrix(RepMatVertAlloc(v1, 7));
 }
 
 TEST(MRMVTest, mul_vec_mat) {
@@ -440,7 +471,35 @@ TEST(MRMVTest, mul_vec_mat) {
   gsl_vector *result = MultiplyVecMat(v, m);
   printf("result1:\n");
   PrintVector(result);
-  printf("result2:\n");
   result = MultiplyMatVec(m, v);
+  printf("result2:\n");
   PrintVector(result);
+}
+
+TEST(MRMVTest, full_linear) {
+  gsl_matrix *m1, *m2;
+  ReadMatrix("test3.dat", &m1);
+  m2 = CreateMatrix(m1->data, m1->size1, m1->size2);
+  printf("Matrix1:\n");
+  PrintMatrix(m1);
+  printf("Matrix2:\n");
+  PrintMatrix(m2);
+  printf("Product:\n");
+  PrintMatrix(MultiplyMatMat(m1, m2));
+}
+
+TEST(MRMVTest, pairwise_division) {
+  double m1_arr[] = { 1, 1,
+                      1, 1 };
+  gsl_matrix *m1 = CreateMatrix(m1_arr, 2, 2);
+  double m2_arr[] = { 2, 2,
+                      2, 2 };
+  gsl_matrix *m2 = CreateMatrix(m2_arr, 2, 2);
+  printf("Matrix1:\n");
+  PrintMatrix(m1);
+  printf("Matrix2:\n");
+  PrintMatrix(m2);
+  gsl_matrix_div_elements(m1, m2);
+  printf("Quotient:\n");
+  PrintMatrix(m1);
 }
