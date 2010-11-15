@@ -25,6 +25,45 @@
 using std::set;
 using std::vector;
 
+int NumberOfRows(FILE *f) {
+  char lastChar = '\n';
+  char currentChar = NULL;
+  int count = 0;
+  while ((currentChar=fgetc(f))!=EOF) {
+    if(lastChar == '\n' && currentChar != '\n') {
+      ++count;
+    }
+    lastChar = currentChar;
+  }
+  fseek(f,0,SEEK_SET);
+  return count;
+}
+
+int NumberOfColumns(FILE *f) {
+  char lastChar = ' ';
+  char currentChar = NULL;
+  int count = 0;
+  while ((currentChar=fgetc(f))!='\n') {
+    if(isspace(lastChar) && !isspace(currentChar)) {
+      ++count;
+    }
+    lastChar = currentChar;
+  }
+  fseek(f,0,SEEK_SET);
+  return count;
+}
+
+void ReadMatrix(const char *filename, gsl_matrix ** m) {
+  int rows, cols;
+  FILE *f;
+  f = fopen(filename, "r");
+  rows = NumberOfRows(f);
+  cols = NumberOfColumns(f);
+  *m = gsl_matrix_alloc(rows, cols);
+  gsl_matrix_fscanf(f, *m);
+  fclose(f);  
+}
+
 void PrintSubMatrix(gsl_matrix * m,
     size_t k1,
     size_t k2,
@@ -41,8 +80,8 @@ void PrintSubMatrix(gsl_matrix * m,
 }
 
 void PrintMatrix(gsl_matrix * m) {
-  for (size_t j = 0; j < m->size2; ++j) {
-    for (size_t  i = 0; i < m->size1; ++i) {
+  for (size_t i = 0; i < m->size1; ++i) {
+    for (size_t  j = 0; j < m->size2; ++j) {
       printf("%.2f ", gsl_matrix_get(m, i, j));
     }
     printf("\n");
@@ -133,6 +172,22 @@ gsl_matrix * DiagAlloc(gsl_vector * v) {
     return mat;
 }
 
+gsl_matrix * RepMatHorizAlloc(gsl_vector * v) {
+    gsl_matrix *mat = gsl_matrix_alloc(v->size, v->size);
+    for (size_t i = 0; i < v->size; ++i) {
+      gsl_matrix_set_row(mat, i, v);
+    }
+    return mat;
+}
+
+gsl_matrix * RepMatVertAlloc(gsl_vector * v) {
+    gsl_matrix *mat = gsl_matrix_alloc(v->size, v->size);
+    for (size_t i = 0; i < v->size; ++i) {
+      gsl_matrix_set_col(mat, i, v);
+    }
+    return mat;
+}
+
 gsl_matrix * CreateMatrix(double * arr, size_t size1, size_t size2) {
   gsl_matrix *m = gsl_matrix_alloc(size1, size2);
   for (size_t j = 0; j < size2; ++j) {
@@ -179,8 +234,16 @@ double LinearKernel(gsl_vector *v1, gsl_vector *v2) {
   return MultiplyVecVec(v1, v2);
 }
 
+double StandardizedLinearKernel(gsl_vector *v1, gsl_vector *v2) {
+  return LinearKernel(v1, v2)/(sqrt(LinearKernel(v1, v1))*sqrt(LinearKernel(v2, v2)));
+}
+
 double PolynomialKernel(gsl_vector *v1, gsl_vector *v2, double d) {
   return pow((MultiplyVecVec(v1, v2) + 1), d);
+}
+
+double StandardizedPolynomialKernel(gsl_vector *v1, gsl_vector *v2, double d) {
+  return PolynomialKernel(v1, v2, d)/(sqrt(PolynomialKernel(v1, v1, d))*sqrt(PolynomialKernel(v2, v2, d)));
 }
 
 double GaussianKernel(gsl_vector *v1, gsl_vector *v2, gsl_vector *t) {
@@ -240,18 +303,8 @@ TEST(MRVMTest, sphering) {
 
 TEST(MRVMTest, CrossValidation) {
   gsl_matrix *mm;
-
-  // read matrix from file
-  int rows, cols;
-  FILE *f;
-  f = fopen("test2.dat", "r");
-  fscanf(f, "%d %d", &rows, &cols);
-  mm = gsl_matrix_alloc(rows, cols);
-  gsl_matrix_fscanf(f, mm);
-  fclose(f);
-
+  ReadMatrix("test2.dat", &mm);
   CrossValidation(mm, 3);
-
   gsl_matrix_free(mm);
 }
 
@@ -303,6 +356,28 @@ TEST(MRVMTest, linear_kernel) {
   ASSERT_EQ(8, answer);
 }
 
+TEST(MRVMTest, linear_kernel_from_file) {
+  gsl_matrix *m;
+  ReadMatrix("test2.dat", &m);
+  gsl_vector *v1 = gsl_vector_alloc(m->size2);
+  gsl_vector *v2 = gsl_vector_alloc(m->size2);
+  gsl_matrix_get_row(v1, m, 0);
+  gsl_matrix_get_row(v2, m, 1);
+  PrintVector(v1);
+  PrintVector(v2);
+  double answer = LinearKernel(v1, v2);
+  ASSERT_EQ(6, answer);
+}
+
+TEST(MRVMTest, standardized_linear_kernel) {
+  double v1_arr[] = { 1, 2 };
+  double v2_arr[] = { 2, 3 };
+  gsl_vector *v1 = CreateVector(v1_arr, 2);
+  gsl_vector *v2 = CreateVector(v2_arr, 2);
+  double answer = StandardizedLinearKernel(v1, v2);
+  ASSERT_EQ(0.99227787671366774, answer);
+}
+
 TEST(MRVMTest, polynomial_kernel) {
   double v1_arr[] = { 1, 2 };
   double v2_arr[] = { 4, 3 };
@@ -310,6 +385,15 @@ TEST(MRVMTest, polynomial_kernel) {
   gsl_vector *v2 = CreateVector(v2_arr, 2);
   double answer = PolynomialKernel(v1, v2, 2);
   ASSERT_EQ(121, answer);
+}
+
+TEST(MRVMTest, standardized_polynomial_kernel) {
+  double v1_arr[] = { 1, 2 };
+  double v2_arr[] = { 2, 3 };
+  gsl_vector *v1 = CreateVector(v1_arr, 2);
+  gsl_vector *v2 = CreateVector(v2_arr, 2);
+  double answer = StandardizedPolynomialKernel(v1, v2, 2);
+  ASSERT_EQ(0.9642857142857143, answer);
 }
 
 TEST(MRVMTest, gaussian_kernel) {
@@ -330,6 +414,17 @@ TEST(MRVMTest, diagonal) {
   PrintVector(v1);
   printf("Diagonal Matrix\n");
   PrintMatrix(DiagAlloc(v1));
+}
+
+TEST(MRVMTest, repmat) {
+  double v[] = {1, 2, 3};
+  gsl_vector *v1 = CreateVector(v, 3);
+  printf("Original Vector\n");
+  PrintVector(v1);
+  printf("Horiz Repmat Matrix\n");
+  PrintMatrix(RepMatHorizAlloc(v1));
+  printf("Vert Repmat Matrix\n");
+  PrintMatrix(RepMatVertAlloc(v1));
 }
 
 TEST(MRMVTest, mul_vec_mat) {
