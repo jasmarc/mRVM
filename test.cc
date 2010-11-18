@@ -97,18 +97,18 @@ void PrintVector(gsl_vector * v) {
 
 void SphereMatrix(gsl_matrix * m) {
   gsl_vector *v;
-  v = gsl_vector_alloc(m->size2);
-  for (size_t i = 0; i < m->size1; ++i) {
+  v = gsl_vector_alloc(m->size1);
+  for (size_t j = 0; j < m->size2; ++j) {
     float sum = 0.0;
-    for (size_t j = 0; j < m->size2; ++j) {
+    for (size_t i = 0; i < m->size1; ++i) {
       sum += gsl_matrix_get(m, i, j);
     }
-    gsl_matrix_get_row(v, m, i);
-    double mean = gsl_stats_mean(v->data, 1, m->size2);
-    double stdev = gsl_stats_sd(v->data, 1, m->size2);
+    gsl_matrix_get_col(v, m, j);
+    double mean = gsl_stats_mean(v->data, 1, m->size1);
+    double stdev = gsl_stats_sd(v->data, 1, m->size1);
     gsl_vector_add_constant(v, -mean);
     gsl_vector_scale(v, 1.0/stdev);
-    gsl_matrix_set_row(m, i, v);
+    gsl_matrix_set_col(m, j, v);
   }
   gsl_vector_free(v);
 }
@@ -250,13 +250,39 @@ double MultiplyVecVec(gsl_vector *v1, gsl_vector *v2) {
   return result;
 }
 
-gsl_matrix * MultiplyMatMat(gsl_matrix *m1, gsl_matrix *m2) {
+void VectorReciprocalSqrt(gsl_vector *v) {
+  for (size_t i = 0; i < v->size; ++i) {
+    double j = gsl_vector_get(v, i);
+    gsl_vector_set(v, i, 1.0/sqrt(j));
+  }
+}
+
+gsl_matrix * MultiplyMatMatTranspose(gsl_matrix *m1, gsl_matrix *m2) {
   gsl_matrix *result = gsl_matrix_alloc(m1->size1, m2->size1);
   cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
               CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
               CblasTrans ,     // const enum CBLAS_TRANSPOSE TransB
               m1->size1,       // const int M
               m2->size1,       // const int N
+              m1->size2,       // const int K
+              1.0f,            // const double alpha
+              m1->data,        // const double * A
+              m1->size2,       // const int lda
+              m2->data,        // const double * B
+              m2->size2,       // const int ldb
+              0.0f,            // const double beta
+              result->data,    // double * C
+              result->size2);  // const int ldc
+  return result;
+}
+
+gsl_matrix * MultiplyMatMat(gsl_matrix *m1, gsl_matrix *m2) {
+  gsl_matrix *result = gsl_matrix_alloc(m1->size1, m2->size1);
+  cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
+              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
+              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransB
+              m1->size1,       // const int M
+              m2->size2,       // const int N
               m1->size2,       // const int K
               1.0f,            // const double alpha
               m1->data,        // const double * A
@@ -299,6 +325,19 @@ double GaussianKernel(gsl_vector *v1, gsl_vector *v2, gsl_vector *t) {
   result = MultiplyVecVec(v1m, v1);
   result = gsl_sf_exp(result);
   return result;
+}
+
+gsl_matrix * MatrixInvert(gsl_matrix *m) {
+  int n = m->size1;
+  gsl_matrix *copy = CreateMatrix(m->data, n, n);
+  gsl_matrix *inverse = gsl_matrix_alloc(n, n);
+  gsl_permutation *perm = gsl_permutation_alloc(n);
+  int s = 0;
+  gsl_linalg_LU_decomp(copy, perm, &s);
+  gsl_linalg_LU_invert(copy, perm, inverse);
+  gsl_permutation_free(perm);
+  gsl_matrix_free(copy);
+  return inverse;
 }
 
 TEST(MRVMTest, submatrix) {
@@ -406,7 +445,7 @@ TEST(MRVMTest, standardized_linear_kernel) {
   gsl_vector *v1 = CreateVector(v1_arr, 2);
   gsl_vector *v2 = CreateVector(v2_arr, 2);
   double answer = StandardizedLinearKernel(v1, v2);
-  ASSERT_EQ(0.99227787671366774, answer);
+  ASSERT_EQ(0.99227786064147949, answer);
 }
 
 TEST(MRVMTest, polynomial_kernel) {
@@ -424,7 +463,7 @@ TEST(MRVMTest, standardized_polynomial_kernel) {
   gsl_vector *v1 = CreateVector(v1_arr, 2);
   gsl_vector *v2 = CreateVector(v2_arr, 2);
   double answer = StandardizedPolynomialKernel(v1, v2, 2);
-  ASSERT_EQ(0.9642857142857143, answer);
+  ASSERT_EQ(0.96428573131561279, answer);
 }
 
 TEST(MRVMTest, gaussian_kernel) {
@@ -477,15 +516,37 @@ TEST(MRMVTest, mul_vec_mat) {
 }
 
 TEST(MRMVTest, full_linear) {
-  gsl_matrix *m1, *m2;
-  ReadMatrix("test3.dat", &m1);
+  gsl_matrix *m1, *m2, *m3, *m4, *m5;
+  ReadMatrix("test.dat", &m1);
+  SphereMatrix(m1);
   m2 = CreateMatrix(m1->data, m1->size1, m1->size2);
   printf("Matrix1:\n");
   PrintMatrix(m1);
   printf("Matrix2:\n");
   PrintMatrix(m2);
   printf("Product:\n");
-  PrintMatrix(MultiplyMatMat(m1, m2));
+  m3 = MultiplyMatMatTranspose(m1, m2);
+  PrintMatrix(m3);
+
+  gsl_vector_view diag = gsl_matrix_diagonal(m3);
+  gsl_vector *v = gsl_vector_alloc((&diag.vector)->size);
+  gsl_vector_memcpy(v, &diag.vector);
+  VectorReciprocalSqrt(v);
+  printf("\nVector:\n");
+  PrintVector(v);
+
+  m4 = RepMatVertAlloc(v, m1->size1);
+  printf("\nMatrix 4:\n");
+  PrintMatrix(m4);
+
+  m5 = RepMatHorizAlloc(v, m2->size1);
+  printf("\nMatrix 5:\n");
+  PrintMatrix(m5);
+
+  gsl_matrix_mul_elements(m3, m4);
+  gsl_matrix_mul_elements(m3, m5);
+  printf("\nConclusion:\n");
+  PrintMatrix(m3);
 }
 
 TEST(MRMVTest, pairwise_division) {
@@ -502,4 +563,24 @@ TEST(MRMVTest, pairwise_division) {
   gsl_matrix_div_elements(m1, m2);
   printf("Quotient:\n");
   PrintMatrix(m1);
+}
+
+TEST(MRMVTest, vector_sqrt) {
+  double v_arr[] = { 4, 36, 9, 25, 2 };
+  gsl_vector *v = CreateVector(v_arr, 5);
+  VectorReciprocalSqrt(v);
+  PrintVector(v);
+}
+
+TEST(MRMVTest, invert) {
+  double m_arr[] = { 0.1, 0.3,
+                     0.1, 0.25 };
+  gsl_matrix *m1 = CreateMatrix(m_arr, 2, 2);
+  gsl_matrix *m2 = MatrixInvert(m1);
+  printf("Initial Matrix:\n");
+  PrintMatrix(m1);
+  printf("Inverted Matrix:\n");
+  PrintMatrix(m2);
+  printf("Product:\n");
+  PrintMatrix(MultiplyMatMat(m1, m2));
 }
