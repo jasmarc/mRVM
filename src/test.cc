@@ -4,12 +4,17 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_statistics.h>
+#include <gsl/gsl_cdf.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf_exp.h>
+#include <gsl/gsl_sf_pow_int.h>
+#include <gsl/gsl_math.h>
 #include <gsl_blas.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <ctype.h>
+#include <math.h>
 #include <list>
 #include <algorithm>
 #include <functional>
@@ -198,6 +203,10 @@ gsl_matrix * CreateMatrix(double * arr, size_t size1, size_t size2) {
   return m;
 }
 
+gsl_matrix * CloneMatrix(gsl_matrix * m) {
+  return CreateMatrix(m->data, m->size1, m->size2);
+}
+
 gsl_vector * CreateVector(double * arr, size_t size) {
   gsl_vector *v = gsl_vector_alloc(size);
   for (size_t i = 0; i < size; ++i) {
@@ -209,8 +218,8 @@ gsl_vector * CreateVector(double * arr, size_t size) {
 gsl_vector * MultiplyVecMat(gsl_vector *v, gsl_matrix *m) {
   gsl_vector *result = gsl_vector_calloc(v->size);
   cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
-              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
-              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransB
+              CblasNoTrans,    // const enum CBLAS_TRANSPOSE TransA
+              CblasNoTrans,    // const enum CBLAS_TRANSPOSE TransB
               1,               // const int M
               m->size2,        // const int N
               v->size,         // const int K
@@ -228,8 +237,8 @@ gsl_vector * MultiplyVecMat(gsl_vector *v, gsl_matrix *m) {
 gsl_vector * MultiplyMatVec(gsl_matrix *m, gsl_vector *v) {
   gsl_vector *result = gsl_vector_calloc(v->size);
   cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
-              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
-              CblasTrans ,     // const enum CBLAS_TRANSPOSE TransB
+              CblasNoTrans,    // const enum CBLAS_TRANSPOSE TransA
+              CblasTrans,      // const enum CBLAS_TRANSPOSE TransB
               m->size1,        // const int M (height of A)
               v->size,         // const int N (width of B)
               m->size2,        // const int K (width of A)
@@ -260,8 +269,8 @@ void VectorReciprocalSqrt(gsl_vector *v) {
 gsl_matrix * MultiplyMatMatTranspose(gsl_matrix *m1, gsl_matrix *m2) {
   gsl_matrix *result = gsl_matrix_alloc(m1->size1, m2->size1);
   cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
-              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
-              CblasTrans ,     // const enum CBLAS_TRANSPOSE TransB
+              CblasNoTrans,    // const enum CBLAS_TRANSPOSE TransA
+              CblasTrans,      // const enum CBLAS_TRANSPOSE TransB
               m1->size1,       // const int M
               m2->size1,       // const int N
               m1->size2,       // const int K
@@ -279,8 +288,8 @@ gsl_matrix * MultiplyMatMatTranspose(gsl_matrix *m1, gsl_matrix *m2) {
 gsl_matrix * MultiplyMatMat(gsl_matrix *m1, gsl_matrix *m2) {
   gsl_matrix *result = gsl_matrix_alloc(m1->size1, m2->size1);
   cblas_dgemm(CblasRowMajor,   // const enum CBLAS_ORDER Order
-              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransA
-              CblasNoTrans ,   // const enum CBLAS_TRANSPOSE TransB
+              CblasNoTrans,    // const enum CBLAS_TRANSPOSE TransA
+              CblasNoTrans,    // const enum CBLAS_TRANSPOSE TransB
               m1->size1,       // const int M
               m2->size2,       // const int N
               m1->size2,       // const int K
@@ -338,6 +347,22 @@ gsl_matrix * MatrixInvert(gsl_matrix *m) {
   gsl_permutation_free(perm);
   gsl_matrix_free(copy);
   return inverse;
+}
+
+double UpdateA(double tau, double wnc, double v) {
+  return (2*tau + 1)/(wnc*wnc + 2*v);
+}
+
+void UpdateYcn(gsl_matrix *y, gsl_matrix *w, gsl_matrix *k, int c, int n) {
+    gsl_vector_view sub1 = gsl_matrix_row(w, c);
+    PrintVector(&sub1.vector);
+    gsl_vector_view sub2 = gsl_matrix_row(k, n);
+    PrintVector(&sub2.vector);
+    printf("%f\n", MultiplyVecVec(&sub1.vector, &sub2.vector));
+}
+
+void UpdateYin(gsl_matrix *y, gsl_matrix *w, gsl_matrix *k, int c, int n) {
+    ;
 }
 
 TEST(MRVMTest, submatrix) {
@@ -583,4 +608,136 @@ TEST(MRMVTest, invert) {
   PrintMatrix(m2);
   printf("Product:\n");
   PrintMatrix(MultiplyMatMat(m1, m2));
+}
+
+TEST(MRMVTest, update_w) {
+  double K_data[] = {
+     0.702, -0.998, -0.510, -0.073,  0.465,
+     0.518, -1.627,  0.782,  0.783,  0.959,
+     0.658,  1.029, -0.741,  0.164,  1.269,
+     0.985, -0.034,  0.590, -0.904, -1.469,
+    -0.647, -1.656, -1.795, -0.387,  0.887 };
+  double A_data[] =  {  1.325,  0.181,  0.306,  0.814,  1.419 };
+  double yc_data[] = { -0.376,  0.351, -0.888, -0.388,  1.711 };
+  gsl_matrix *K = CreateMatrix(K_data, 5, 5);
+  gsl_matrix *K_copy = CloneMatrix(K);
+  gsl_vector *A_vector = CreateVector(A_data, 5);
+  gsl_matrix *A = DiagAlloc(A_vector);
+  gsl_vector *yc = CreateVector(yc_data, 5);
+
+  gsl_matrix *w = MultiplyMatMatTranspose(K, K_copy);
+  gsl_matrix_add(w, A);
+  w = MatrixInvert(w);
+  w = MultiplyMatMat(w, K);
+  gsl_vector * wc = MultiplyMatVec(w, yc);
+
+  PrintVector(wc);
+}
+
+TEST(MRMVTest, update_a) {
+  double tau = 1.2;
+  double wnc = 2.3;
+  double v = 3.4;
+  double a = UpdateA(tau, wnc, v);
+  printf("a = %f\n", a);
+}
+
+TEST(MRMVTest, cdf) {
+  for (double i = -5; i < 5; i = i + 0.5) {
+    double result = gsl_cdf_ugaussian_P(i);
+    printf("CDF at %f: %f\n", i, result);
+  }
+}
+
+TEST(MRMVTest, rand) {
+    const gsl_rng_type * T;
+    gsl_rng * r;
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc (T);
+
+    for (int i = 0; i < 10; i++) {
+        double k = gsl_ran_gaussian (r, 1.0);
+        printf (" %f\n", k);
+    }
+    gsl_rng_free (r);
+}
+
+TEST(MRMVTest, update_y) {
+    const gsl_rng_type * T;
+    gsl_rng * r;
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc (T);
+
+    double y_arr[] = { 1, 8, 2, 6,
+                       4, 5, 1, 0,
+                       3, 3, 4, 2};
+    gsl_matrix *y = CreateMatrix(y_arr, 3, 4);
+
+    double w_arr[] = {3, 1, 4, 0,
+                      4, 3, 9, 2,
+                      3, 1, 5, 7};
+    gsl_matrix *w = CreateMatrix(w_arr, 3, 4);
+
+    double k_arr[] = {1, 2, 9,
+                      4, 6, 5,
+                      3, 7, 4};
+    gsl_matrix *k = CreateMatrix(k_arr, 3, 3);
+
+    double classes_arr[] = { 2, 1, 0 };
+    gsl_vector *classes = CreateVector(classes_arr, 3);
+
+    int N = y->size1;
+    int C = y->size2;
+
+    for (int n = 0; n < N; ++n) {
+        int i = gsl_vector_get(classes, n);
+        gsl_vector_view k_n = gsl_matrix_row(k, n);
+        for (int c = 0; c < C; ++c) {
+            gsl_vector_view w_c = gsl_matrix_column(w, c);
+            gsl_vector_view w_i = gsl_matrix_column(w, i);
+            double wckn = MultiplyVecVec(&w_c.vector, &k_n.vector);
+            double wikn = MultiplyVecVec(&w_i.vector, &k_n.vector);
+            printf("c = %d n = %d\n", c, n);
+            if(c != i) {
+                double numerator = 0;
+                double denominator = 0;
+                for (int monte = 0; monte < 1000; ++monte) {
+                    double u = gsl_ran_gaussian(r, 1.0);
+                    double num = gsl_ran_ugaussian_pdf(wckn - wikn);
+                    double den = gsl_cdf_ugaussian_P(u + wikn - wckn);
+                    for (int j = 0; j < C; ++j) {
+                        if(j != i && j != c) {
+                            gsl_vector_view w_j = gsl_matrix_column(w, j);
+                            double wjkn = MultiplyVecVec(&w_j.vector, &k_n.vector);
+                            num *= gsl_cdf_ugaussian_P(u + wikn - wjkn);
+                            den *= gsl_cdf_ugaussian_P(u + wikn - wjkn);
+                        } // if
+                    } // for j
+                    numerator   += num;
+                    denominator += den;
+                } // for monte
+                if(denominator != 0) {
+                    double val = wckn - numerator / denominator;
+                    printf("%f\n", val);
+                    gsl_matrix_set(y, n, c, val);
+                } else {
+                    printf("Error! denominator equal to zero!\n");
+                } // if
+            } else {
+                double val = wckn;
+                for (int j = 0; j < C; ++j) {
+                    if(j != i) {
+                        gsl_vector_view w_j = gsl_matrix_column(w, j);
+                        double wjkn = MultiplyVecVec(&w_j.vector, &k_n.vector);
+                        double y_nj = gsl_matrix_get(y, n, j);
+                        val = val - (y_nj - wjkn);
+                    } // if
+                } //for j
+                printf("%f\n", val);
+                gsl_matrix_set(y, n, c, val);
+            } // if
+        } // for c
+    }  // for n
 }

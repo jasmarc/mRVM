@@ -11,6 +11,9 @@ test:
 	ar -rv libgtest.a gtest-all.o
 	$(CC) $(CFLAGS) $(GSLFLAGS) ${GTEST_DIR}/src/gtest_main.cc test.cc libgtest.a -o test
 
+gsl_poly_orth:
+	$(CC) -L/opt/local/lib -I/opt/local/include -I${GTEST_DIR}/include -I${GTEST_DIR} $(GSLFLAGS) gsl_poly_orth.c -o gsl_poly_orth.o
+
 lint:
 	python cpplint.py test.cc
 
