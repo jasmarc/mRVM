@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<project name="mRVM" default="make">
+    <description>
+        Ant adaptor for the mRVM Makefile.
+    </description>
+
+    <target name="make" description="build mRVM">
+        <exec executable="make">
+            <arg value="-f"/>
+            <arg value="Makefile"/>
+	   		<arg value="mRVM"/>
+        </exec>
+    </target>
+
+    <target name="test" description="test mRVM">
+        <exec executable="make">
+            <arg value="-f"/>
+            <arg value="Makefile"/>
+            <arg value="test"/>
+        </exec>
+    </target>
+
+    <target name="clean" description="clean mRVM">
+        <exec executable="make">
+        	<arg value="-f"/>
+        	<arg value="Makefile"/>
+            <arg value="clean"/>
+        </exec>
+
+    </target>
+</project>
