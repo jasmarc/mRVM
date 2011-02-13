@@ -15,7 +15,7 @@ namespace jason {
 class Matrix {
 public:
 	Matrix();
-	Matrix(char* filename);
+	Matrix(const char* filename);
 	virtual ~Matrix();
 	void Print();
 private:

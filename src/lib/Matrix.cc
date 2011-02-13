@@ -1,10 +1,3 @@
-/*
- * Matrix.cpp
- *
- *  Created on: Feb 10, 2011
- *      Author: jason
- */
-
 #include "Matrix.h"
 #include <iostream>
 
@@ -12,13 +5,7 @@ using namespace std;
 
 namespace jason {
 
-Matrix::Matrix() {
-	// TODO Auto-generated constructor stub
-	cout << "constructor";
-
-}
-
-Matrix::Matrix(char* filename) {
+Matrix::Matrix(const char* filename) {
 	cout << "read " << filename << "\n";
 	int rows, cols;
 	FILE *f;
@@ -31,8 +18,7 @@ Matrix::Matrix(char* filename) {
 }
 
 Matrix::~Matrix() {
-	// TODO Auto-generated destructor stub
-	cout << "destructor\n";
+	gsl_matrix_free(this->m);
 }
 
 void Matrix::Print() {
