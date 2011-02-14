@@ -10,6 +10,14 @@ Matrix::Matrix(gsl_matrix *data) {
 	this->m = data;
 }
 
+Matrix::Matrix(Vector *vec) {
+	gsl_matrix *mat = gsl_matrix_alloc(vec->v->size, vec->v->size);
+	gsl_vector_view diag = gsl_matrix_diagonal(mat);
+	gsl_matrix_set_all(mat, 0.0);
+	gsl_vector_memcpy(&diag.vector, vec->v);
+	this->m = mat;
+}
+
 Matrix::Matrix(double *data, size_t height, size_t width) {
 	this->m = gsl_matrix_alloc(height, width);
 	for (size_t row = 0; row < height; ++row) {
@@ -36,7 +44,7 @@ Matrix::~Matrix() {
 }
 
 Matrix *Matrix::Clone() {
-	return new Matrix(this->Data(), this->Width(), this->Height());
+	return new Matrix(this->m->data, this->Width(), this->Height());
 }
 
 Matrix *Matrix::Invert() {
@@ -77,11 +85,7 @@ size_t Matrix::Width() {
 	return this->m->size2;
 }
 
-double *Matrix::Data() {
-	return this->m->data;
-}
-
-Matrix *Matrix::Multiply(Matrix *other) {
+Matrix* Matrix::Multiply(Matrix *other) {
 	gsl_matrix *result = gsl_matrix_alloc(this->Height(), other->Height());
 	cblas_dgemm(CblasRowMajor,// const enum CBLAS_ORDER Order
 			CblasNoTrans,     // const enum CBLAS_TRANSPOSE TransA
@@ -90,9 +94,9 @@ Matrix *Matrix::Multiply(Matrix *other) {
 			other->Height(),  // const int N
 			this->Width(),    // const int K
 			1.0f,             // const double alpha
-			this->Data(),     // const double * A
+			this->m->data,    // const double * A
 			this->Width(),    // const int lda
-			other->Data(),    // const double * B
+			other->m->data,   // const double * B
 			other->Width(),   // const int ldb
 			0.0f,             // const double beta
 			result->data,     // double * C

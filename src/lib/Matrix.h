@@ -4,30 +4,32 @@
  *  Created on: Feb 10, 2011
  *      Author: jason
  */
-#include <gsl_linalg.h>
-#include <gsl/gsl_matrix.h>
 
 #ifndef MATRIX_H_
 #define MATRIX_H_
+
+#include <gsl_linalg.h>
+#include <gsl_matrix.h>
+#include "Vector.h"
 
 namespace jason {
 
 class Matrix {
 public:
-	Matrix();
+	Matrix(Vector *vec);
 	Matrix(double *data, size_t height, size_t width);
 	Matrix(gsl_matrix* data);
 	Matrix(const char* filename);
 	virtual ~Matrix();
 	size_t Height();
 	size_t Width();
-	double *Data();
 	Matrix *Clone();
 	Matrix *Invert();
 	double Get(int row, int col);
 	void Set(int row, int col, double val);
 	void Print();
-	Matrix *Multiply(Matrix *other);
+	Matrix* Multiply(Matrix *other);
+	friend class Vector;
 private:
 	int NumberOfRows(FILE *f);
 	int NumberOfColumns(FILE *f);

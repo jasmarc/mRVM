@@ -10,11 +10,12 @@ int main ()
 	double m_arr[] = {1, 2, 9,
 	                  4, 6, 5,
 	                  3, 7, 4};
-	Matrix *m1 = new Matrix(m_arr, 3, 3);
-	Matrix *m2 = m1->Invert();
-	m1->Print();
+	double v_arr[] = {1, 2, 3};
+	Vector *v = new Vector(v_arr, 3);
+	v->Print();
 	cout << "\n";
-	m2->Print();
+	Matrix *m = new Matrix(v);
+	m->Print();
 	cout << "End.\n";
 	return 0;
 }

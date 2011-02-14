@@ -32,4 +32,4 @@ runtest:
 	./$(OUTPUT_DIR)/test --gtest_filter=*update_y*
 
 $(EXEC): 
-	$(CC) $(CFLAGS) $(GSLFLAGS) -o $(OUTPUT_DIR)/$(EXEC) $(SRC_DIR)/lib/Matrix.cc $(SRC_DIR)/main.cc
+	$(CC) $(CFLAGS) $(GSLFLAGS) -o $(OUTPUT_DIR)/$(EXEC) $(SRC_DIR)/lib/Vector.cc $(SRC_DIR)/lib/Matrix.cc $(SRC_DIR)/main.cc
