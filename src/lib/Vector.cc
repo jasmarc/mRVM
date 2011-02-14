@@ -1,11 +1,7 @@
-/*
- * Vector.cpp
- *
- *  Created on: Feb 14, 2011
- *      Author: jason
- */
-
 #include "Vector.h"
+#include <iostream>
+#include <gsl_linalg.h>
+#include <gsl_matrix.h>
 
 namespace jason {
 
@@ -25,6 +21,10 @@ void Vector::Print() {
 
 Vector::~Vector() {
 	gsl_vector_free(this->v);
+}
+
+Vector::Vector(gsl_vector *v) {
+	this->v = v;
 }
 
 }

@@ -11,11 +11,14 @@ int main ()
 	                  4, 6, 5,
 	                  3, 7, 4};
 	double v_arr[] = {1, 2, 3};
-	Vector *v = new Vector(v_arr, 3);
+	Matrix *m = new Matrix(m_arr, 3, 3);
+	m->Print();
+	cout << "\n";
+	Vector *v = m->Row(0);
 	v->Print();
 	cout << "\n";
-	Matrix *m = new Matrix(v);
-	m->Print();
+	v = m->Column(0);
+	v->Print();
 	cout << "End.\n";
 	return 0;
 }

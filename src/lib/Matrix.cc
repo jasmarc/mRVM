@@ -1,14 +1,12 @@
 #include "Matrix.h"
 #include <iostream>
-#include <gsl/gsl_blas.h>
+#include <gsl_blas.h>
+#include <gsl_linalg.h>
+#include <gsl_matrix.h>
 
 using namespace std;
 
 namespace jason {
-
-Matrix::Matrix(gsl_matrix *data) {
-	this->m = data;
-}
 
 Matrix::Matrix(Vector *vec) {
 	gsl_matrix *mat = gsl_matrix_alloc(vec->v->size, vec->v->size);
@@ -57,7 +55,7 @@ Matrix *Matrix::Invert() {
 	gsl_linalg_LU_invert(copy, perm, inverse);
 	gsl_permutation_free(perm);
 	gsl_matrix_free(copy);
-	return new Matrix(inverse);
+	return new Matrix(inverse->data, n, n);
 }
 
 double Matrix::Get(int row, int col) {
@@ -66,6 +64,18 @@ double Matrix::Get(int row, int col) {
 
 void Matrix::Set(int row, int col, double val) {
 	gsl_matrix_set(this->m, row, col, val);
+}
+
+Vector* Matrix::Row(int row) {
+	gsl_vector *v = gsl_vector_alloc(this->Width());
+	gsl_matrix_get_row(v, m, row);
+	return new Vector(v);
+}
+
+Vector* Matrix::Column(int col) {
+	gsl_vector *v = gsl_vector_alloc(this->Height());
+	gsl_matrix_get_col(v, m, col);
+	return new Vector(v);
 }
 
 void Matrix::Print() {
@@ -101,7 +111,7 @@ Matrix* Matrix::Multiply(Matrix *other) {
 			0.0f,             // const double beta
 			result->data,     // double * C
 			result->size2);   // const int ldc
-	return new Matrix(result);
+	return new Matrix(result->data, this->Height(), other->Height());
 }
 
 int Matrix::NumberOfRows(FILE *f) {

@@ -1,14 +1,7 @@
-/*
- * Vector.h
- *
- *  Created on: Feb 14, 2011
- *      Author: jason
- */
-
 #ifndef VECTOR_H_
 #define VECTOR_H_
 
-#include <gsl_linalg.h>
+#include <iostream>
 #include <gsl_matrix.h>
 
 namespace jason {
@@ -20,6 +13,7 @@ public:
 	void Print();
 	friend class Matrix;
 private:
+	Vector(gsl_vector *v);
 	gsl_vector *v;
 };
 
