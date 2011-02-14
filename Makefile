@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -g -Wall -L/opt/local/lib -I/opt/local/include -I$(SRC_DIR)/lib -I${GTEST_DIR}/include -I${GTEST_DIR}
+CFLAGS = -g -Wall -L/opt/local/lib -I/opt/local/include -I$(SRC_DIR) -I${GTEST_DIR}/include -I${GTEST_DIR}
 GSLFLAGS = -lgsl -lgslcblas -lm -I/opt/local/include/gsl
 EXEC = mRVM
 GTEST_DIR = ./lib/gtest-1.5.0
