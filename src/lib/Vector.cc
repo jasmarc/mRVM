@@ -1,7 +1,4 @@
 #include "Vector.h"
-#include <iostream>
-#include <gsl_linalg.h>
-#include <gsl_matrix.h>
 
 namespace jason {
 
@@ -21,6 +18,28 @@ void Vector::Print() {
 
 Vector::~Vector() {
 	gsl_vector_free(this->v);
+}
+
+Matrix *Vector::RepmatVert(size_t k) {
+	gsl_matrix *mat = gsl_matrix_alloc(v->size, k);
+	for (size_t i = 0; i < k; ++i) {
+		gsl_matrix_set_col(mat, i, v);
+	}
+	return new Matrix(mat);
+}
+
+Matrix *Vector::RepmatHoriz(size_t k) {
+	gsl_matrix *mat = gsl_matrix_alloc(k, v->size);
+	for (size_t i = 0; i < k; ++i) {
+		gsl_matrix_set_row(mat, i, v);
+	}
+	return new Matrix(mat);
+}
+
+double Multiply(Vector *other) {
+	double result;
+	gsl_blas_ddot(this->v, other->v, &result);
+	return result;
 }
 
 Vector::Vector(gsl_vector *v) {

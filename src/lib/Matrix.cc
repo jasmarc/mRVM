@@ -1,12 +1,12 @@
 #include "Matrix.h"
-#include <iostream>
-#include <gsl_blas.h>
-#include <gsl_linalg.h>
-#include <gsl_matrix.h>
 
 using namespace std;
 
 namespace jason {
+
+Matrix::Matrix(gsl_matrix *mat) {
+	this->m = mat;
+}
 
 Matrix::Matrix(Vector *vec) {
 	gsl_matrix *mat = gsl_matrix_alloc(vec->v->size, vec->v->size);

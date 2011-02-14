@@ -1,11 +1,15 @@
 #ifndef MATRIX_H_
 #define MATRIX_H_
 
-#include "Vector.h"
 #include <iostream>
+#include <gsl_blas.h>
+#include <gsl_linalg.h>
 #include <gsl_matrix.h>
+#include "Vector.h"
 
 namespace jason {
+
+class Vector;
 
 class Matrix {
 public:
@@ -25,6 +29,7 @@ public:
 	Matrix* Multiply(Matrix *other);
 	friend class Vector;
 private:
+	Matrix(gsl_matrix *mat);
 	int NumberOfRows(FILE *f);
 	int NumberOfColumns(FILE *f);
 	gsl_matrix *CloneGSLMatrix();
