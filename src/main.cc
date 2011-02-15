@@ -1,26 +1,23 @@
-#include <iostream>
+// Copyright 2011 Jason Marcell
+
+#include <stdio.h>
+
 #include "lib/Matrix.h"
 
-using namespace std;
-using namespace jason;
+using jason::Matrix;
+using jason::Vector;
 
-int main ()
-{
-	cout << "Starting...\n";
-	double m1_arr[] = {1, 2, 9,
-	                   4, 6, 5,
-	                   3, 7, 4,
-			  		   6, 2, 0};
-	double m2_arr[] = {1, 2, 9,
-	                   4, 6, 5,
-	                   3, 7, 4};
-	double v_arr[] = {1, 2, 3};
-	Matrix *m1 = new Matrix(m1_arr, 4, 3);
-	Vector *v1 = m1->Row(0);
-	Vector *v2 = m1->Row(2);
-	v1->Print();
-	v2->Print();
-	cout << v1->Multiply(v2);
-	cout << "End.\n";
-	return 0;
+int main() {
+  double m1_arr[] = { 1, 2, 9, 4, 6, 5, 3, 7, 4, 6, 2, 0 };
+
+  double m2_arr[] = { 1, 2, 9, 4, 6, 5, 3, 7, 4 };
+
+  double v_arr[] = { 1, 2, 3 };
+
+  Matrix *m1 = new Matrix(m1_arr, 4, 3);
+  printf("Starting...\n");
+  m1->Sphere();
+  m1->Print();
+  printf("End.\n");
+  return 0;
 }

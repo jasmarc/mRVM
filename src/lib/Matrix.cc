@@ -2,6 +2,8 @@
 
 #include <ctype.h>
 
+#include <gsl/gsl_statistics.h>
+
 #include "lib/Matrix.h"
 
 namespace jason {
@@ -31,11 +33,16 @@ Matrix::Matrix(const char* filename) {
   int rows, cols;
   FILE *f;
   f = fopen(filename, "r");
-  rows = NumberOfRows(f);
-  cols = NumberOfColumns(f);
-  this->m = gsl_matrix_alloc(rows, cols);
-  gsl_matrix_fscanf(f, this->m);
-  fclose(f);
+  if (f) {
+    rows = NumberOfRows(f);
+    cols = NumberOfColumns(f);
+    this->m = gsl_matrix_alloc(rows, cols);
+    gsl_matrix_fscanf(f, this->m);
+    fclose(f);
+  } else {
+    perror("Error");
+    throw("File read error.");
+  }
 }
 
 Matrix::~Matrix() {
@@ -77,6 +84,24 @@ Vector* Matrix::Column(int col) {
   gsl_vector *v = gsl_vector_alloc(this->Height());
   gsl_matrix_get_col(v, m, col);
   return new Vector(v);
+}
+
+void Matrix::Sphere() {
+  gsl_vector *v;
+  v = gsl_vector_alloc(m->size1);
+  for (size_t j = 0; j < m->size2; ++j) {
+    double sum = 0.0;
+    for (size_t i = 0; i < m->size1; ++i) {
+      sum += gsl_matrix_get(m, i, j);
+    }
+    gsl_matrix_get_col(v, m, j);
+    double mean = gsl_stats_mean(v->data, 1, m->size1);
+    double stdev = gsl_stats_sd(v->data, 1, m->size1);
+    gsl_vector_add_constant(v, -mean);
+    gsl_vector_scale(v, 1.0 / stdev);
+    gsl_matrix_set_col(m, j, v);
+  }
+  gsl_vector_free(v);
 }
 
 void Matrix::Print() {

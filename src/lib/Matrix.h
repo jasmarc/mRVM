@@ -29,6 +29,7 @@ class Matrix {
     void Set(int row, int col, double val);
     Vector *Row(int row);
     Vector *Column(int col);
+    void Sphere();
     void Print();
     Matrix* Multiply(Matrix *other);
     friend class Vector;
