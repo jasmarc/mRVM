@@ -22,6 +22,14 @@ Vector::~Vector() {
   gsl_vector_free(this->v);
 }
 
+size_t Vector::Size() {
+  return this->v->size;
+}
+
+double Vector::Get(size_t elem) {
+  return gsl_vector_get(this->v, elem);
+}
+
 Matrix *Vector::RepmatVert(size_t k) {
   gsl_matrix *mat = gsl_matrix_alloc(v->size, k);
   for (size_t i = 0; i < k; ++i) {

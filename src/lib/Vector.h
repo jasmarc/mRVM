@@ -15,6 +15,8 @@ class Vector {
   public:
     explicit Vector(double *data, size_t size);
     virtual ~Vector();
+    size_t Size();
+    double Get(size_t elem);
     Matrix *RepmatVert(size_t k);
     Matrix *RepmatHoriz(size_t k);
     double Multiply(Vector *other);

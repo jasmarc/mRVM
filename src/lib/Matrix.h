@@ -17,6 +17,7 @@ class Vector;
 
 class Matrix {
   public:
+    explicit Matrix(size_t height, size_t width);
     explicit Matrix(Vector *vec);
     explicit Matrix(double *data, size_t height, size_t width);
     explicit Matrix(const char* filename);
@@ -27,11 +28,15 @@ class Matrix {
     Matrix *Invert();
     double Get(int row, int col);
     void Set(int row, int col, double val);
-    Vector *Row(int row);
-    Vector *Column(int col);
+    void Add(Matrix *other);
+    Vector *Row(size_t row);
+    Vector *Column(size_t col);
+    void SetColumn(size_t col, Vector *vec);
+    void SetRow(size_t row, Vector *vec);
     void Sphere();
     void Print();
     Matrix* Multiply(Matrix *other);
+    Vector* Multiply(Vector *vec);
     friend class Vector;
   private:
     explicit Matrix(gsl_matrix *mat);
