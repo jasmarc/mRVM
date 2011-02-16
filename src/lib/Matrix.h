@@ -25,7 +25,7 @@ class Matrix {
     size_t Height();
     size_t Width();
     Matrix *Clone();
-    Matrix *Invert();
+    void Invert();
     double Get(int row, int col);
     void Set(int row, int col, double val);
     void Add(Matrix *other);

@@ -20,13 +20,12 @@ void Trainer::Process() {
   x->Sphere();
   k = BuildKernel();
   InitializeYAW();
-
-  printf("Initial Matrix:\n");
-  x->Print();
-  printf("Kernel Matrix:\n");
-  k->Print();
-  printf("Y Matrix:\n");
-  y->Print();
+  for (int i = 0; i < 20; ++i) {
+    UpdateW();
+    UpdateA(1.0, 1.0);
+    UpdateY();
+  }
+  w->Print();
 }
 
 Matrix *Trainer::BuildKernel() {
@@ -71,7 +70,7 @@ void Trainer::UpdateW() {
     Vector *Y_c = y->Column(col);
     w = k->Multiply(k);
     w->Add(A);
-    w = w->Invert();
+    w->Invert();
     w = w->Multiply(k);
     Vector *W_c = w->Multiply(Y_c);
     w->SetColumn(col, W_c);

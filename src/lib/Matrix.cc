@@ -57,17 +57,16 @@ Matrix *Matrix::Clone() {
   return new Matrix(this->m->data, this->Width(), this->Height());
 }
 
-Matrix *Matrix::Invert() {
+void Matrix::Invert() {
   int n = this->Width();
-  gsl_matrix *copy = this->CloneGSLMatrix();
   gsl_matrix *inverse = gsl_matrix_alloc(n, n);
   gsl_permutation *perm = gsl_permutation_alloc(n);
   int s = 0;
-  gsl_linalg_LU_decomp(copy, perm, &s);
-  gsl_linalg_LU_invert(copy, perm, inverse);
+  gsl_linalg_LU_decomp(m, perm, &s);
+  gsl_linalg_LU_invert(m, perm, inverse);
   gsl_permutation_free(perm);
-  gsl_matrix_free(copy);
-  return new Matrix(inverse->data, n, n);
+  gsl_matrix_free(m);
+  m = inverse;
 }
 
 double Matrix::Get(int row, int col) {
@@ -207,12 +206,12 @@ int Matrix::NumberOfColumns(FILE *f) {
 gsl_matrix *Matrix::CloneGSLMatrix() {
   size_t height = this->Height();
   size_t width = this->Width();
-  gsl_matrix *m = gsl_matrix_alloc(height, width);
+  gsl_matrix *ret = gsl_matrix_alloc(height, width);
   for (size_t row = 0; row < height; ++row) {
     for (size_t col = 0; col < width; ++col) {
-      this->Set(row, col, *(this->m->data + row * width + col));
+      gsl_matrix_set(ret, row, col, *(this->m->data + row * width + col));
     }
   }
-  return m;
+  return ret;
 }
 }
