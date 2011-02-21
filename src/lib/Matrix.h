@@ -38,6 +38,7 @@ class Matrix {
     Matrix* Multiply(Matrix *other);
     Vector* Multiply(Vector *vec);
     friend class Vector;
+    friend class Kernel;
   private:
     explicit Matrix(gsl_matrix *mat);
     int NumberOfRows(FILE *f);

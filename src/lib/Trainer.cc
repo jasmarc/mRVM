@@ -18,7 +18,7 @@ Trainer::~Trainer() {
 
 void Trainer::Process() {
   x->Sphere();
-  k = BuildKernel();
+  k = BuildKernel(x);
   InitializeYAW();
   for (int i = 0; i < 20; ++i) {
     UpdateW();
@@ -28,8 +28,12 @@ void Trainer::Process() {
   w->Print();
 }
 
-Matrix *Trainer::BuildKernel() {
-  return x->Multiply(x);
+Matrix *Trainer::GetW() {
+  return this->w;
+}
+
+Kernel *Trainer::BuildKernel(Matrix *m) {
+  return new Kernel(m, m);;
 }
 
 void Trainer::InitializeYAW() {

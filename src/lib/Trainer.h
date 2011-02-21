@@ -4,16 +4,19 @@
 #define SRC_LIB_TRAINER_H_
 
 #include "lib/Matrix.h"
+#include "lib/Kernel.h"
 
 namespace jason {
 
 class Matrix;
+class Kernel;
 
 class Trainer {
   public:
     explicit Trainer(Matrix *matrix, Vector *labels, size_t classes);
     virtual ~Trainer();
     void Process();
+    Matrix *GetW();
 
   private:
     Matrix *x;  // Data Points
@@ -21,11 +24,11 @@ class Trainer {
     size_t samples, features, classes;
 
     Matrix *w;
-    Matrix *k;
+    Kernel *k;
     Matrix *a;
     Matrix *y;
 
-    Matrix *BuildKernel();
+    Kernel *BuildKernel(Matrix *m);
     void InitializeYAW();
     void UpdateA(double tau, double v);
     void UpdateW();

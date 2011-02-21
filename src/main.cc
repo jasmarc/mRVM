@@ -3,11 +3,15 @@
 #include <stdio.h>
 
 #include "lib/Matrix.h"
+#include "lib/Kernel.h"
 #include "lib/Trainer.h"
+#include "lib/Predictor.h"
 
 using jason::Matrix;
 using jason::Vector;
 using jason::Trainer;
+using jason::Kernel;
+using jason::Predictor;
 
 int main() {
   double m1_arr[] = { 1, 2, 9,
@@ -15,21 +19,21 @@ int main() {
                       3, 7, 4,
                       6, 2, 0 };
 
+  double m2_arr[] = { 1, 2, 9,
+                      4, 6, 5,
+                      6, 2, 0 };
+
   double v_arr[] = { 0, 1, 0, 3 };
-
-  double m2_arr[] = { 20.25, -2.39, -1.92, -14.93,
-      -2.39, 2.33, 2.03, -0.97,
-      -1.92, 2.03, 4.38, -3.50,
-      -14.93, -0.97, -3.50, 20.41 };
-
-  double m3_arr[] = {1, 2, 3, 4};
 
   printf("Starting...\n");
 
   Matrix *m1 = new Matrix(m1_arr, 4, 3);
   Vector *v = new Vector(v_arr, 4);
   Trainer *t = new Trainer(m1, v, 4);
-  t->Process();
+  //t->Process();
+
+  Matrix *m2 = new Matrix(m2_arr, 3, 3);
+  Predictor *p = new Predictor(t->GetW(), m1, m2);
 
   printf("End.\n");
   return 0;

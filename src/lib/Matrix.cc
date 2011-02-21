@@ -106,15 +106,11 @@ void Matrix::Sphere() {
   size_t width = this->Width();
   Vector *vec;
   for (size_t col = 0; col < width; ++col) {
-    double sum = 0.0;
-    for (size_t row = 0; row < height; ++row) {
-      sum += this->Get(row, col);
-    }
     vec = this->Column(col);
     double mean = gsl_stats_mean(vec->v->data, 1, height);
     double stdev = gsl_stats_sd(vec->v->data, 1, height);
     gsl_vector_add_constant(vec->v, -mean);
-    gsl_vector_scale(vec->v, 1.0 / stdev);
+    gsl_vector_scale(vec->v, 1.0 / stdev);  // TODO(jrm) possible blowup
     gsl_matrix_set_col(m, col, vec->v);
     delete vec;
   }
