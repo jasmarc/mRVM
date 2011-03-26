@@ -8,6 +8,10 @@
 
 namespace jason {
 
+Matrix::Matrix() {
+  // TODO(jrm) danger, the m variable isn't getting set
+}
+
 Matrix::Matrix(size_t height, size_t width) {
   this->m = gsl_matrix_alloc(height, width);
 }
@@ -53,7 +57,7 @@ Matrix::~Matrix() {
   gsl_matrix_free(this->m);
 }
 
-Matrix *Matrix::Clone() {
+Matrix *Matrix::Clone() {  // TODO(jrm) change to copy constructor
   return new Matrix(this->m->data, this->Width(), this->Height());
 }
 
@@ -84,13 +88,13 @@ void Matrix::Add(Matrix *other) {
 Vector* Matrix::Row(size_t row) {
   gsl_vector *v = gsl_vector_alloc(this->Width());
   gsl_matrix_get_row(v, m, row);
-  return new Vector(v);
+  return new Vector(v);  // TODO(jrm) warning! newing up
 }
 
 Vector* Matrix::Column(size_t col) {
   gsl_vector *v = gsl_vector_alloc(this->Height());
   gsl_matrix_get_col(v, m, col);
-  return new Vector(v);
+  return new Vector(v);  // TODO(jrm) warning! newing up
 }
 
 void Matrix::SetRow(size_t row, Vector *vec) {
@@ -110,7 +114,7 @@ void Matrix::Sphere() {
     double mean = gsl_stats_mean(vec->v->data, 1, height);
     double stdev = gsl_stats_sd(vec->v->data, 1, height);
     gsl_vector_add_constant(vec->v, -mean);
-    gsl_vector_scale(vec->v, 1.0 / stdev);  // TODO(jrm) possible blowup
+    gsl_vector_scale(vec->v, 1.0 / stdev);
     gsl_matrix_set_col(m, col, vec->v);
     delete vec;
   }
@@ -150,6 +154,7 @@ Matrix* Matrix::Multiply(Matrix *other) {
       result->data,           // double * C
       result->size2);         // const int ldc
   return new Matrix(result->data, this->Height(), other->Height());
+  // TODO(jrm) warning! newing up
 }
 
 Vector* Matrix::Multiply(Vector *vec) {
@@ -169,6 +174,7 @@ Vector* Matrix::Multiply(Vector *vec) {
       result->data,           // double * C
       1);                     // const int ldc
   return new Vector(result->data, result->size);
+  // TODO(jrm) warning! newing up
 }
 
 int Matrix::NumberOfRows(FILE *f) {

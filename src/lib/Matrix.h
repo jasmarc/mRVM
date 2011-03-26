@@ -5,9 +5,9 @@
 
 #include <stddef.h>
 
-#include <gsl_blas.h>
-#include <gsl_linalg.h>
-#include <gsl_matrix.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_matrix.h>
 
 #include "lib/Vector.h"
 
@@ -17,6 +17,7 @@ class Vector;
 
 class Matrix {
   public:
+    explicit Matrix();
     explicit Matrix(size_t height, size_t width);
     explicit Matrix(Vector *vec);
     explicit Matrix(double *data, size_t height, size_t width);

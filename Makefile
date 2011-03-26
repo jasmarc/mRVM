@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS = -g -Wall -L/opt/local/lib -I/opt/local/include -I$(SRC_DIR) -I${GTEST_DIR}/include -I${GTEST_DIR}
-GSLFLAGS = -lgsl -lgslcblas -lm -I/opt/local/include/gsl
+CFLAGS = -g -Wall -L/usr/local/lib -I/usr/local/include -I$(SRC_DIR) -I${GTEST_DIR}/include -I${GTEST_DIR}
+GSLFLAGS = -L/usr/local/Cellar/gsl/1.14/lib -lgsl -lgslcblas -lm -I/usr/local/Cellar/gsl/1.14/include/gsl
 EXEC = mRVM
 GTEST_DIR = ./lib/gtest-1.5.0
 SRC_DIR = ./src
@@ -38,5 +38,9 @@ $(EXEC):
 		$(SRC_DIR)/lib/Trainer.cc \
 		$(SRC_DIR)/lib/Predictor.cc \
 		$(SRC_DIR)/lib/Kernel.cc \
+		$(SRC_DIR)/lib/LinearKernel.cc \
+		$(SRC_DIR)/lib/PolynomialKernel.cc \
+		$(SRC_DIR)/lib/GaussianKernel.cc \
 		$(SRC_DIR)/lib/RandomNumberGenerator.cc \
+		$(SRC_DIR)/lib/GaussHermiteQuadrature.cc \
 		$(SRC_DIR)/main.cc

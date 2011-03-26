@@ -2,6 +2,7 @@
 
 #include "lib/RandomNumberGenerator.h"
 #include "lib/Trainer.h"
+#include "lib/LinearKernel.h"
 
 namespace jason {
 
@@ -33,7 +34,7 @@ Matrix *Trainer::GetW() {
 }
 
 Kernel *Trainer::BuildKernel(Matrix *m) {
-  return new Kernel(m, m);;
+  return new LinearKernel(m, m);
 }
 
 void Trainer::InitializeYAW() {

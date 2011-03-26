@@ -35,7 +35,7 @@ Matrix *Vector::RepmatVert(size_t k) {
   for (size_t i = 0; i < k; ++i) {
     gsl_matrix_set_col(mat, i, v);
   }
-  return new Matrix(mat);
+  return new Matrix(mat);  // TODO(jrm) warning! newing up
 }
 
 Matrix *Vector::RepmatHoriz(size_t k) {
@@ -43,13 +43,45 @@ Matrix *Vector::RepmatHoriz(size_t k) {
   for (size_t i = 0; i < k; ++i) {
     gsl_matrix_set_row(mat, i, v);
   }
-  return new Matrix(mat);
+  return new Matrix(mat);  // TODO(jrm) warning! newing up
 }
 
 double Vector::Multiply(Vector *other) {
   double result;
   gsl_blas_ddot(this->v, other->v, &result);
   return result;
+}
+
+Vector *Vector::Multiply(Matrix *m) {
+  gsl_vector *result = gsl_vector_alloc(m->Width());
+  cblas_dgemm(CblasRowMajor,  // const enum CBLAS_ORDER Order
+      CblasNoTrans,           // const enum CBLAS_TRANSPOSE TransA
+      CblasNoTrans,           // const enum CBLAS_TRANSPOSE TransB
+      1,                      // const int M
+      m->Width(),             // const int N
+      this->Size(),           // const int K
+      1.0f,                   // const double alpha
+      this->v->data,          // const double * A
+      this->Size(),           // const int lda
+      m->m->data,             // const double * B
+      m->Width(),             // const int ldb
+      0.0f,                   // const double beta
+      result->data,           // double * C
+      result->size);          // const int ldc
+  return new Vector(result->data, m->Width());
+  // TODO(jrm) warning! newing up
+}
+
+Vector *Vector::Subtract(Vector *other) {
+  Vector *ret = new Vector(v);  // TODO(jrm) warning! newing up
+  gsl_vector_sub(ret->v, other->v);
+  return ret;
+}
+
+Vector *Vector::Add(Vector *other) {
+  Vector *ret = new Vector(v);  // TODO(jrm) warning! newing up
+  gsl_vector_add(ret->v, other->v);
+  return ret;
 }
 
 Vector::Vector(gsl_vector *v) {

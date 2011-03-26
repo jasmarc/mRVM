@@ -20,6 +20,9 @@ class Vector {
     Matrix *RepmatVert(size_t k);
     Matrix *RepmatHoriz(size_t k);
     double Multiply(Vector *other);
+    Vector *Multiply(Matrix *m);
+    Vector *Subtract(Vector *other);
+    Vector *Add(Vector *other);
     void Print();
     friend class Matrix;
   private:

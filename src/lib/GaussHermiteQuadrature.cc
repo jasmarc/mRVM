@@ -1,3 +1,5 @@
+// Copyright 2011 Jason Marcell
+
 # include <cstdlib>
 # include <cstdio>
 # include <cmath>
@@ -7,218 +9,71 @@
 # include <ctime>
 # include <cstring>
 
+#include "lib/GaussHermiteQuadrature.h"
+
 using namespace std;
 
-int main ( int argc, char *argv[] );
-void cdgqf ( int nt, int kind, double alpha, double beta, double t[], 
-  double wts[] );
-void cgqf ( int nt, int kind, double alpha, double beta, double a, double b, 
-  double t[], double wts[] );
-double class_matrix ( int kind, int m, double alpha, double beta, double aj[], 
-  double bj[] );
-void imtqlx ( int n, double d[], double e[], double z[] );
-void parchk ( int kind, int m, double alpha, double beta );
-double r8_abs ( double x );
-double r8_epsilon ( );
-double r8_huge ( );
-double r8_sign ( double x );
-void r8mat_write ( string output_filename, int m, int n, double table[] );
-void rule_write ( int order, string filename, double x[], double w[], 
-  double r[] );
-void scqf ( int nt, double t[], int mlt[], double wts[], int nwts, int ndx[], 
-  double swts[], double st[], int kind, double alpha, double beta, double a, 
-  double b );
-void sgqf ( int nt, double aj[], double bj[], double zemu, double t[], 
-  double wts[] );
-void timestamp ( );
+namespace jason {
 
-//****************************************************************************80
+GaussHermiteQuadrature::GaussHermiteQuadrature() {
+  // TODO Auto-generated constructor stub
 
-int main ( int argc, char *argv[] )
-
-//****************************************************************************80
-//
-//  Purpose:
-//
-//    MAIN is the main program for GEN_HERMITE_RULE.
-//
-//  Discussion:
-//
-//    This program computes a standard or exponentially weighted 
-//    Gauss-Hermite quadrature rule and writes it to a file.
-//
-//    The user specifies:
-//    * the ORDER (number of points) in the rule;
-//    * ALPHA, the exponent of X;
-//    * A, the center point;
-//    * B, a scale factor;
-//    * FILENAME, the root name of the output files.
-//
-//  Licensing:
-//
-//    This code is distributed under the GNU LGPL license. 
-//
-//  Modified:
-//
-//    23 February 2010
-//
-//  Author:
-//
-//    John Burkardt
-//
-{
-  double a;
-  double alpha;
-  double b;
-  double beta;
-  string filename;
-  int kind;
-  int order;
-  double *r;
-  double *w;
-  double *x;
-
-  cout << "\n";
-  timestamp ( );
-  cout << "\n";
-  cout << "GEN_HERMITE_RULE\n";
-  cout << "  C++ version\n";
-  cout << "\n";
-  cout << "  Compiled on " << __DATE__ << " at " << __TIME__ << ".\n";
-  cout << "\n";
-  cout << "  Compute a generalized Gauss-Hermite rule for approximating\n";
-  cout << "\n";
-  cout << "    Integral ( -oo < x < +oo ) |x-a|^ALPHA exp ( - b * ( x - a )^2 ) f(x) dx\n";
-  cout << "\n";
-  cout << "  of order ORDER and parameter ALPHA.\n";
-  cout << "\n";
-  cout << "  The user specifies ORDER, ALPHA, A, B, and FILENAME.\n";
-  cout << "\n";
-  cout << "  ORDER is the number of points.\n";
-  cout << "\n";
-  cout << "  ALPHA is the exponent of |x|.\n";
-  cout << "\n";
-  cout << "  A is the center point:\n";
-  cout << "\n";
-  cout << "  B is a scale factor;\n";
-  cout << "\n";
-  cout << "  FILENAME is used to generate 3 files:\n";
-  cout << "\n";
-  cout << "    filename_w.txt - the weight file\n";
-  cout << "    filename_x.txt - the abscissa file.\n";
-  cout << "    filename_r.txt - the region file.\n";
-//
-//  Initialize parameters;
-//
-  beta = 0.0;
-//
-//  Get ORDER.
-//
-  if ( 1 < argc )
-  {
-    order = atoi ( argv[1] );
-  }
-  else
-  {
-    cout << "\n";
-    cout << "  Enter the value of ORDER (1 or greater)\n";
-    cin >> order;
-  }
-//
-//  Get ALPHA.
-//
-  if ( 2 < argc )
-  {
-    alpha = atof ( argv[2] );
-  }
-  else
-  {
-    cout << "\n";
-    cout << "  Enter the value of ALPHA (greater than -1.0)\n";
-    cin >> alpha;
-  }
-//
-//  Get A.
-//
-  if ( 3 < argc )
-  {
-    a = atof ( argv[3] );
-  }
-  else
-  {
-    cout << "\n";
-    cout << "  Enter A, the center point (default 0)\n";
-    cin >> a;
-  }
-//
-//  Get B.
-//
-  if ( 4 < argc )
-  {
-    b = atoi ( argv[4] );
-  }
-  else
-  {
-    cout << "\n";
-    cout << "  Enter B, the scale (default 1)\n";
-    cin >> b;
-  }
-//
-//  Get FILENAME.
-//
-  if ( 5 < argc )
-  {
-    filename = argv[5];
-  }
-  else
-  {
-    cout << "\n";
-    cout << "  Enter FILENAME, the \"root name\" of the quadrature files).\n";
-    cin >> filename;
-  }
-//
-//  Input summary.
-//
-  cout << "\n";
-  cout << "  ORDER = " << order << "\n";
-  cout << "  ALPHA = " << alpha << "\n";
-  cout << "  A = " << a << "\n";
-  cout << "  B = " << b << "\n";
-  cout << "  FILENAME = \"" << filename << "\".\n";
-//
-//  Construct the rule.
-//
-  w = new double[order];
-  x = new double[order];
-  
-  kind = 6;
-  cgqf ( order, kind, alpha, beta, a, b, x, w );
-//
-//  Write the rule.
-//
-  r = new double[2];
-  r[0] = - r8_huge ( );
-  r[1] =   r8_huge ( );
-
-  rule_write ( order, filename, x, w, r );
-//
-//  Terminate.
-//
-  delete [] r;
-  delete [] w;
-  delete [] x;
-  cout << "\n";
-  cout << "GEN_HERMITE_RULE:\n";
-  cout << "  Normal end of execution.\n";
-
-  cout << "\n";
-  timestamp ( );
-
-  return 0;
 }
+
+GaussHermiteQuadrature::~GaussHermiteQuadrature() {
+  // TODO Auto-generated destructor stub
+}
+
+// HERMITE_RULE
+//   Compute a Gauss-Hermite quadrature rule for approximating
+//
+//     Integral ( -oo < x < +oo ) f(x) exp ( - b * ( x - a )^2 ) dx
+//
+//   of order ORDER.
+//
+//   The user specifies ORDER, A, B
+//
+//   ORDER is the number of points;
+//
+//   A is the center point:
+//
+//   B is a scale factor;
+//
+//     w - the weight file
+//     x - the abscissa file.
+//     r - the region file.
+void GaussHermiteQuadrature::Process(int order, double **x, double **w) {
+  double a = 0;
+  double alpha = 0.0;
+  double b = 1;
+  double beta = 0.0;
+  int kind;
+
+  *w = new double[order];
+  *x = new double[order];
+
+  kind = 6;
+  cgqf(order, kind, alpha, beta, a, b, *x, *w);
+
+  double *r = new double[2];
+  r[0] = -r8_huge();
+  r[1] = r8_huge();
+
+//  Vector *w_vec = new Vector(w, order);
+//  Vector *x_vec = new Vector(x, order);
+//  Vector *r_vec = new Vector(r, 2);
+//
+//  w_vec->Print();
+//  x_vec->Print();
+//
+//  delete[] r;
+//  delete[] w;
+//  delete[] x;
+}
+
 //****************************************************************************80
 
-void cdgqf ( int nt, int kind, double alpha, double beta, double t[], 
+void GaussHermiteQuadrature::cdgqf ( int nt, int kind, double alpha, double beta, double t[],
   double wts[] )
 
 //****************************************************************************80
@@ -239,7 +94,7 @@ void cdgqf ( int nt, int kind, double alpha, double beta, double t[],
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -253,7 +108,7 @@ void cdgqf ( int nt, int kind, double alpha, double beta, double t[],
 //  Reference:
 //
 //    Sylvan Elhay, Jaroslav Kautsky,
-//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of 
+//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of
 //    Interpolatory Quadrature,
 //    ACM Transactions on Mathematical Software,
 //    Volume 13, Number 4, December 1987, pages 399-415.
@@ -305,7 +160,7 @@ void cdgqf ( int nt, int kind, double alpha, double beta, double t[],
 }
 //****************************************************************************80
 
-void cgqf ( int nt, int kind, double alpha, double beta, double a, double b, 
+void GaussHermiteQuadrature::cgqf ( int nt, int kind, double alpha, double beta, double a, double b,
   double t[], double wts[] )
 
 //****************************************************************************80
@@ -324,7 +179,7 @@ void cgqf ( int nt, int kind, double alpha, double beta, double a, double b,
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -338,7 +193,7 @@ void cgqf ( int nt, int kind, double alpha, double beta, double a, double b,
 //  Reference:
 //
 //    Sylvan Elhay, Jaroslav Kautsky,
-//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of 
+//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of
 //    Interpolatory Quadrature,
 //    ACM Transactions on Mathematical Software,
 //    Volume 13, Number 4, December 1987, pages 399-415.
@@ -378,7 +233,7 @@ void cgqf ( int nt, int kind, double alpha, double beta, double a, double b,
 //
   cdgqf ( nt, kind, alpha, beta, t, wts );
 //
-//  Prepare to scale the quadrature formula to other weight function with 
+//  Prepare to scale the quadrature formula to other weight function with
 //  valid A and B.
 //
   mlt = new int[nt];
@@ -400,7 +255,7 @@ void cgqf ( int nt, int kind, double alpha, double beta, double a, double b,
 }
 //****************************************************************************80
 
-double class_matrix ( int kind, int m, double alpha, double beta, double aj[], 
+double GaussHermiteQuadrature::class_matrix ( int kind, int m, double alpha, double beta, double aj[],
   double bj[] )
 
 //****************************************************************************80
@@ -424,7 +279,7 @@ double class_matrix ( int kind, int m, double alpha, double beta, double aj[],
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -438,7 +293,7 @@ double class_matrix ( int kind, int m, double alpha, double beta, double aj[],
 //  Reference:
 //
 //    Sylvan Elhay, Jaroslav Kautsky,
-//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of 
+//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of
 //    Interpolatory Quadrature,
 //    ACM Transactions on Mathematical Software,
 //    Volume 13, Number 4, December 1987, pages 399-415.
@@ -548,10 +403,10 @@ double class_matrix ( int kind, int m, double alpha, double beta, double aj[],
   {
     ab = alpha + beta;
     abi = 2.0 + ab;
-    zemu = pow ( 2.0, ab + 1.0 ) * gamma ( alpha + 1.0 ) 
+    zemu = pow ( 2.0, ab + 1.0 ) * gamma ( alpha + 1.0 )
       * gamma ( beta + 1.0 ) / gamma ( abi );
     aj[0] = ( beta - alpha ) / abi;
-    bj[0] = sqrt ( 4.0 * ( 1.0 + alpha ) * ( 1.0 + beta ) 
+    bj[0] = sqrt ( 4.0 * ( 1.0 + alpha ) * ( 1.0 + beta )
       / ( ( abi + 1.0 ) * abi * abi ) );
     a2b2 = beta * beta - alpha * alpha;
 
@@ -560,7 +415,7 @@ double class_matrix ( int kind, int m, double alpha, double beta, double aj[],
       abi = 2.0 * i + ab;
       aj[i-1] = a2b2 / ( ( abi - 2.0 ) * abi );
       abi = abi * abi;
-      bj[i-1] = sqrt ( 4.0 * i * ( i + alpha ) * ( i + beta ) * ( i + ab ) 
+      bj[i-1] = sqrt ( 4.0 * i * ( i + alpha ) * ( i + beta ) * ( i + ab )
         / ( ( abi - 1.0 ) * abi ) );
     }
   }
@@ -608,7 +463,7 @@ double class_matrix ( int kind, int m, double alpha, double beta, double aj[],
   else if ( kind == 8 )
   {
     ab = alpha + beta;
-    zemu = gamma ( alpha + 1.0 ) * gamma ( - ( ab + 1.0 ) ) 
+    zemu = gamma ( alpha + 1.0 ) * gamma ( - ( ab + 1.0 ) )
       / gamma ( - beta );
     apone = alpha + 1.0;
     aba = ab * apone;
@@ -624,7 +479,7 @@ double class_matrix ( int kind, int m, double alpha, double beta, double aj[],
     for ( i = 2; i <= m - 1; i++ )
     {
       abti = ab + 2.0 * i;
-      bj[i-1] = i * ( alpha + i ) / ( abti - 1.0 ) * ( beta + i ) 
+      bj[i-1] = i * ( alpha + i ) / ( abti - 1.0 ) * ( beta + i )
         / ( abti * abti ) * ( ab + i ) / ( abti + 1.0 );
     }
     bj[m-1] = 0.0;
@@ -638,7 +493,7 @@ double class_matrix ( int kind, int m, double alpha, double beta, double aj[],
 }
 //****************************************************************************80
 
-void imtqlx ( int n, double d[], double e[], double z[] )
+void GaussHermiteQuadrature::imtqlx ( int n, double d[], double e[], double z[] )
 
 //****************************************************************************80
 //
@@ -648,20 +503,20 @@ void imtqlx ( int n, double d[], double e[], double z[] )
 //
 //  Discussion:
 //
-//    This routine is a slightly modified version of the EISPACK routine to 
-//    perform the implicit QL algorithm on a symmetric tridiagonal matrix. 
+//    This routine is a slightly modified version of the EISPACK routine to
+//    perform the implicit QL algorithm on a symmetric tridiagonal matrix.
 //
 //    The authors thank the authors of EISPACK for permission to use this
-//    routine. 
+//    routine.
 //
-//    It has been modified to produce the product Q' * Z, where Z is an input 
-//    vector and Q is the orthogonal matrix diagonalizing the input matrix.  
+//    It has been modified to produce the product Q' * Z, where Z is an input
+//    vector and Q is the orthogonal matrix diagonalizing the input matrix.
 //    The changes consist (essentialy) of applying the orthogonal transformations
 //    directly to Z as they are generated.
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -675,7 +530,7 @@ void imtqlx ( int n, double d[], double e[], double z[] )
 //  Reference:
 //
 //    Sylvan Elhay, Jaroslav Kautsky,
-//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of 
+//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of
 //    Interpolatory Quadrature,
 //    ACM Transactions on Mathematical Software,
 //    Volume 13, Number 4, December 1987, pages 399-415.
@@ -692,7 +547,7 @@ void imtqlx ( int n, double d[], double e[], double z[] )
 //    Input/output, double D(N), the diagonal entries of the matrix.
 //    On output, the information in D has been overwritten.
 //
-//    Input/output, double E(N), the subdiagonal entries of the 
+//    Input/output, double E(N), the subdiagonal entries of the
 //    matrix, in entries E(1) through E(N-1).  On output, the information in
 //    E has been overwritten.
 //
@@ -832,17 +687,17 @@ void imtqlx ( int n, double d[], double e[], double z[] )
 }
 //****************************************************************************80
 
-void parchk ( int kind, int m, double alpha, double beta )
+void GaussHermiteQuadrature::parchk ( int kind, int m, double alpha, double beta )
 
 //****************************************************************************80
 //
 //  Purpose:
 //
-//    PARCHK checks parameters ALPHA and BETA for classical weight functions. 
+//    PARCHK checks parameters ALPHA and BETA for classical weight functions.
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -856,7 +711,7 @@ void parchk ( int kind, int m, double alpha, double beta )
 //  Reference:
 //
 //    Sylvan Elhay, Jaroslav Kautsky,
-//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of 
+//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of
 //    Interpolatory Quadrature,
 //    ACM Transactions on Mathematical Software,
 //    Volume 13, Number 4, December 1987, pages 399-415.
@@ -927,7 +782,7 @@ void parchk ( int kind, int m, double alpha, double beta )
 }
 //****************************************************************************80
 
-double r8_abs ( double x )
+double GaussHermiteQuadrature::r8_abs ( double x )
 
 //****************************************************************************80
 //
@@ -937,11 +792,11 @@ double r8_abs ( double x )
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
-//    19 February 2008
+//    14 November 2006
 //
 //  Author:
 //
@@ -959,7 +814,7 @@ double r8_abs ( double x )
   if ( 0.0 <= x )
   {
     value = x;
-  } 
+  }
   else
   {
     value = -x;
@@ -968,7 +823,7 @@ double r8_abs ( double x )
 }
 //****************************************************************************80
 
-double r8_epsilon ( )
+double GaussHermiteQuadrature::r8_epsilon ( )
 
 //****************************************************************************80
 //
@@ -978,19 +833,19 @@ double r8_epsilon ( )
 //
 //  Discussion:
 //
-//    The roundoff unit is a number R which is a power of 2 with the 
+//    The roundoff unit is a number R which is a power of 2 with the
 //    property that, to the precision of the computer's arithmetic,
 //      1 < 1 + R
-//    but 
+//    but
 //      1 = ( 1 + R / 2 )
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
-//    19 February 2008
+//    01 July 2004
 //
 //  Author:
 //
@@ -1016,7 +871,7 @@ double r8_epsilon ( )
 }
 //****************************************************************************80
 
-double r8_huge ( )
+double GaussHermiteQuadrature::r8_huge ( )
 
 //****************************************************************************80
 //
@@ -1033,11 +888,11 @@ double r8_huge ( )
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
-//    19 February 2008
+//    06 October 2007
 //
 //  Author:
 //
@@ -1056,7 +911,7 @@ double r8_huge ( )
 }
 //****************************************************************************80
 
-double r8_sign ( double x )
+double GaussHermiteQuadrature::r8_sign ( double x )
 
 //****************************************************************************80
 //
@@ -1066,7 +921,7 @@ double r8_sign ( double x )
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -1088,7 +943,7 @@ double r8_sign ( double x )
   if ( x < 0.0 )
   {
     value = -1.0;
-  } 
+  }
   else
   {
     value = 1.0;
@@ -1097,135 +952,8 @@ double r8_sign ( double x )
 }
 //****************************************************************************80
 
-void r8mat_write ( string output_filename, int m, int n, double table[] )
-
-//****************************************************************************80
-//
-//  Purpose:
-//
-//    R8MAT_WRITE writes an R8MAT file with no header.
-//
-//  Licensing:
-//
-//    This code is distributed under the GNU LGPL license. 
-//
-//  Modified:
-//
-//    29 June 2009
-//
-//  Author:
-//
-//    John Burkardt
-//
-//  Parameters:
-//
-//    Input, string OUTPUT_FILENAME, the output filename.
-//
-//    Input, int M, the spatial dimension.
-//
-//    Input, int N, the number of points.
-//
-//    Input, double TABLE[M*N], the table data.
-//
-{
-  int i;
-  int j;
-  ofstream output;
-//
-//  Open the file.
-//
-  output.open ( output_filename.c_str ( ) );
-
-  if ( !output )
-  {
-    cerr << "\n";
-    cerr << "R8MAT_WRITE - Fatal error!\n";
-    cerr << "  Could not open the output file.\n";
-    return;
-  }
-//
-//  Write the data.
-//
-  for ( j = 0; j < n; j++ )
-  {
-    for ( i = 0; i < m; i++ )
-    {
-      output << "  " << setw(24) << setprecision(16) << table[i+j*m];
-    }
-    output << "\n";
-  }
-//
-//  Close the file.
-//
-  output.close ( );
-
-  return;
-}
-//****************************************************************************80
-
-void rule_write ( int order, string filename, double x[], double w[], 
-  double r[] )
-
-//****************************************************************************80
-//
-//  Purpose:
-//
-//    RULE_WRITE writes a quadrature rule to three files.
-//
-//  Licensing:
-//
-//    This code is distributed under the GNU LGPL license. 
-//
-//  Modified:
-//
-//    18 February 2010
-//
-//  Author:
-//
-//    John Burkardt
-//
-//  Parameters:
-//
-//    Input, int ORDER, the order of the rule.
-//
-//    Input, double A, the left endpoint.
-//
-//    Input, double B, the right endpoint.
-//
-//    Input, string FILENAME, specifies the output filenames.
-//    "filename_w.txt", "filename_x.txt", "filename_r.txt" 
-//    defining weights, abscissas, and region.
-// 
-{
-  string filename_r;
-  string filename_w;
-  string filename_x;
-  int i;
-  int kind;
-
-  filename_w = filename + "_w.txt";
-  filename_x = filename + "_x.txt";
-  filename_r = filename + "_r.txt";
-
-  cout << "\n";
-  cout << "  Creating quadrature files.\n";
-  cout << "\n";
-  cout << "  Root file name is     \"" << filename   << "\".\n";
-  cout << "\n";
-  cout << "  Weight file will be   \"" << filename_w << "\".\n";
-  cout << "  Abscissa file will be \"" << filename_x << "\".\n";
-  cout << "  Region file will be   \"" << filename_r << "\".\n";
-            
-  r8mat_write ( filename_w, 1, order, w );
-  r8mat_write ( filename_x, 1, order, x );
-  r8mat_write ( filename_r, 1, 2,     r );
-  
-  return;
-}
-//****************************************************************************80
-
-void scqf ( int nt, double t[], int mlt[], double wts[], int nwts, int ndx[], 
-  double swts[], double st[], int kind, double alpha, double beta, double a, 
+void GaussHermiteQuadrature::scqf ( int nt, double t[], int mlt[], double wts[], int nwts, int ndx[],
+  double swts[], double st[], int kind, double alpha, double beta, double a,
   double b )
 
 //****************************************************************************80
@@ -1242,7 +970,7 @@ void scqf ( int nt, double t[], int mlt[], double wts[], int nwts, int ndx[],
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -1256,7 +984,7 @@ void scqf ( int nt, double t[], int mlt[], double wts[], int nwts, int ndx[],
 //  Reference:
 //
 //    Sylvan Elhay, Jaroslav Kautsky,
-//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of 
+//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of
 //    Interpolatory Quadrature,
 //    ACM Transactions on Mathematical Software,
 //    Volume 13, Number 4, December 1987, pages 399-415.
@@ -1273,7 +1001,7 @@ void scqf ( int nt, double t[], int mlt[], double wts[], int nwts, int ndx[],
 //
 //    Input, int NWTS, the number of weights.
 //
-//    Input, int NDX[NT], used to index the array WTS.  
+//    Input, int NDX[NT], used to index the array WTS.
 //    For more details see the comments in CAWIQ.
 //
 //    Output, double SWTS[NWTS], the scaled weights.
@@ -1462,7 +1190,7 @@ void scqf ( int nt, double t[], int mlt[], double wts[], int nwts, int ndx[],
 }
 //****************************************************************************80
 
-void sgqf ( int nt, double aj[], double bj[], double zemu, double t[], 
+void GaussHermiteQuadrature::sgqf ( int nt, double aj[], double bj[], double zemu, double t[],
   double wts[] )
 
 //****************************************************************************80
@@ -1479,7 +1207,7 @@ void sgqf ( int nt, double aj[], double bj[], double zemu, double t[],
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -1493,7 +1221,7 @@ void sgqf ( int nt, double aj[], double bj[], double zemu, double t[],
 //  Reference:
 //
 //    Sylvan Elhay, Jaroslav Kautsky,
-//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of 
+//    Algorithm 655: IQPACK, FORTRAN Subroutines for the Weights of
 //    Interpolatory Quadrature,
 //    ACM Transactions on Mathematical Software,
 //    Volume 13, Number 4, December 1987, pages 399-415.
@@ -1504,7 +1232,7 @@ void sgqf ( int nt, double aj[], double bj[], double zemu, double t[],
 //
 //    Input, double AJ[NT], the diagonal of the Jacobi matrix.
 //
-//    Input/output, double BJ[NT], the subdiagonal of the Jacobi 
+//    Input/output, double BJ[NT], the subdiagonal of the Jacobi
 //    matrix, in entries 1 through NT-1.  On output, BJ has been overwritten.
 //
 //    Input, double ZEMU, the zero-th moment of the weight function.
@@ -1551,7 +1279,7 @@ void sgqf ( int nt, double aj[], double bj[], double zemu, double t[],
 }
 //****************************************************************************80
 
-void timestamp ( )
+void GaussHermiteQuadrature::timestamp ( )
 
 //****************************************************************************80
 //
@@ -1565,7 +1293,7 @@ void timestamp ( )
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
@@ -1596,4 +1324,5 @@ void timestamp ( )
 
   return;
 # undef TIME_SIZE
+}
 }
