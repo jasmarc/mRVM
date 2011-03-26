@@ -3,3 +3,4 @@
 *.o
 test
 .DS_Store
+bin/
