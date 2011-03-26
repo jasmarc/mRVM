@@ -8,12 +8,11 @@
 
 namespace jason {
 
-Predictor::Predictor(Matrix *w, Vector *t, Matrix *x_train, Matrix *x_predict) {
+Predictor::Predictor(Matrix *w, Matrix *x_train, Matrix *x_predict) {
 //  Vector *v;     // Labels
 //  Matrix *prob;  // Class probabilities
   this->k = new LinearKernel(x_train, x_predict);
   this->w = w;
-  this->t = t;
 }
 
 Predictor::~Predictor() {
@@ -32,22 +31,24 @@ void Predictor::QuadratureApproximation() {
   delete g;
 
   for (size_t n = 0; n < w->Height(); ++n) {
-    size_t i = (size_t)t->Get(n);
-    Vector *kn = k->Row(n);
-    Vector *wi = w->Column(i);
-    double wikn = wi->Multiply(kn);
-    double sum = 0;
-    for (size_t k = 0; k < 3; ++k) {
-      double prod = 1;
-      for (size_t j = 0; j < w->Width(); ++j) {
-        if (j != i) {
-          Vector *wj = w->Column(j);
-          double wjkn = wj->Multiply(kn);
-          prod *= r->GaussianCDF(points[k] + wikn - wjkn);
-        }  // if
-      }  // for j
-      sum += weights[k]*prod;
-    }  // for k
+    for (size_t i = 0; i < w->Width(); ++i) {
+      Vector *kn = k->Row(n);
+      Vector *wi = w->Column(i);
+      double wikn = wi->Multiply(kn);
+      double sum = 0;
+      for (size_t k = 0; k < 3; ++k) {
+        double prod = 1;
+        for (size_t j = 0; j < w->Width(); ++j) {
+          if (j != i) {
+            Vector *wj = w->Column(j);
+            double wjkn = wj->Multiply(kn);
+            prod *= r->GaussianCDF(points[k] + wikn - wjkn);
+          }  // if
+        }  // for j
+        sum += weights[k]*prod;
+      }  // for k
+      printf("sample n=%zu, class i=%zu, value=%f", n, i, sum);
+    } // for i
   }  // for n
   delete r;
 }

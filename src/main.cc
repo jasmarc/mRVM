@@ -24,8 +24,6 @@ void print_help(int exval);
 void run();
 
 int main(int argc, char **argv) {
-
-
   int opt;
 
   // no arguments given
