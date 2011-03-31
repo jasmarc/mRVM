@@ -10,6 +10,7 @@
 #include "lib/Trainer.h"
 #include "lib/Predictor.h"
 #include "lib/GaussHermiteQuadrature.h"
+#include "lib/Log.h"
 
 #define PACKAGE "mRVM"
 #define VERSION "0.0.1"
@@ -115,34 +116,47 @@ void print_help(int exval) {
   printf("  -f FILE         set input file\n");
 
   printf("Based upon work by Psorakis, Damoulas, Girolami.\n");
-  printf("Implementation by Damoulas and Marcell, {damoulas, jrm425}@cs.cornell.edu\n\n");
+  printf("Implementation by Marcell, jasonmarcell@gmail.com\n\n");
 
   exit(exval);
 }
 
 void run()
 {
-    double m1_arr[] =  {1, 0.9,
-                        0.8, 0.9,
-                        0.5, 0.6,
-                        0.1, 0.2,
-                        0.2, 0.3};
+  // The number of classes
+  const size_t CLASSES = 2;
 
-    double m2_arr[] =  {1, 0.9,
-        0.8, 0.9,
-        0.1, 0.2,
-        0.2, 0.3,
-        0.7, 0.7};
+  // Training points
+  double train_arr[] =  \
+      {1, 0.9,
+    0.8, 0.9,
+    0.5, 0.6,
+    0.1, 0.2,
+    0.2, 0.3};
+  Matrix *train = new Matrix(train_arr, 5, 2);
 
-    double v_arr[] = {0, 0, 0, 1, 1};
+  // Labels
+  double labels_arr[] = {0, 0, 0, 1, 1};
+  Vector *labels = new Vector(labels_arr, 5);
 
-    printf("Starting...\n");
-    Matrix *m1 = new Matrix(m1_arr, 5, 2);
-    Vector *v = new Vector(v_arr, 5);
-    Trainer *t = new Trainer(m1, v, 2);
-    t->Process();
-    Matrix *m2 = new Matrix(m2_arr, 5, 2);
-    Predictor *p = new Predictor(t->GetW(), m1, m2);
-    p->Predict();
-    printf("End.\n");
+  // Testing Points
+  double test_arr[] =
+      {1, 0.9,
+    0.8, 0.9,
+    0.1, 0.2,
+    0.2, 0.3,
+    0.7, 0.7};
+  Matrix *test = new Matrix(test_arr, 5, 2);
+
+  LOG(VERBOSE, "=== Starting... ===\n");
+
+  // Pass in training points, labels, and number of classes
+  Trainer *trainer = new Trainer(train, labels, CLASSES);
+  trainer->Process();
+
+  // Pass in the w matrix, the training points, and the testing points
+  Predictor *predictor = new Predictor(trainer->GetW(), train, test);
+  predictor->Predict();
+
+  LOG(VERBOSE, "=== End. ===\n");
 }

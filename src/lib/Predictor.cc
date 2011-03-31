@@ -5,28 +5,44 @@
 #include "lib/LinearKernel.h"
 #include "lib/GaussHermiteQuadrature.h"
 #include "lib/RandomNumberGenerator.h"
+#include "lib/Log.h"
 
 namespace jason {
 
 Predictor::Predictor(Matrix *w, Matrix *x_train, Matrix *x_predict) {
-  printf("=== Predictor Constructor. ===\n");
+  LOG(DEBUG, "== Beginning Predictor Constructor. ==\n\n");
+
+  LOG(DEBUG, "= printing x_predict before sphere: =\n");
+  LOG(DEBUG, "%s", x_predict->ToString());
+  LOG(DEBUG, "= end x_predict before sphere. =\n\n");
+
   x_predict->Sphere(x_train);
-  printf("sphered predict matrix:\n");
-  x_predict->Print();
+
+  LOG(DEBUG, "= printing x_predict after sphere: =\n");
+  LOG(DEBUG, "%s", x_predict->ToString());
+  LOG(DEBUG, "= end x_predict after sphere. =\n\n");
+
   this->k = new LinearKernel(x_train, x_predict);
   k->Init();
+
+  LOG(DEBUG, "= printing k: =\n");
+  LOG(DEBUG, "%s", k->ToString());
+  LOG(DEBUG, "= end k. =\n\n");
+
   this->w = w;
-  printf("kernel:\n");
-  k->Print();
-  printf("w:\n");
-  w->Print();
+
+  LOG(DEBUG, "= printing w: =\n");
+  LOG(DEBUG, "%s", w->ToString());
+  LOG(DEBUG, "= end w. =\n\n");
+
+  LOG(DEBUG, "== End Predictor Constructor. ==\n\n");
 }
 
 Predictor::~Predictor() {
 }
 
 void Predictor::Predict() {
-  this->QuadratureApproximation();
+  this->QuadratureApproximation();  // TODO(jrm): remove middle man
 }
 
 void Predictor::QuadratureApproximation() {
@@ -54,7 +70,7 @@ void Predictor::QuadratureApproximation() {
         }  // for j
         sum += weights[k]*prod;
       }  // for k
-      printf("sample n=%zu, class i=%zu, value=%f\n", n, i, sum);
+      LOG(NORMAL, "sample n=%zu, class i=%zu, value=%f\n", n, i, sum);
     } // for i
   }  // for n
   delete r;

@@ -37,6 +37,7 @@ class Matrix {
     void Sphere();
     void Sphere(Matrix *other);
     void Print();
+    char *ToString();
     Matrix* Multiply(Matrix *other);
     Vector* Multiply(Vector *vec);
     friend class Vector;

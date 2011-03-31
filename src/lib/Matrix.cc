@@ -128,10 +128,22 @@ void Matrix::Sphere(Matrix *other) {
 void Matrix::Print() {  // TODO(jrm): turn into ToString
   for (size_t row = 0; row < this->Height(); ++row) {
     for (size_t col = 0; col < this->Width(); ++col) {
-      printf("%.2f ", this->Get(row, col));
+      printf("%.2f\t", this->Get(row, col));
     }
     printf("\n");
   }
+}
+
+char * Matrix::ToString() {
+  char *ret = (char*) malloc(256 * sizeof(char));  // TODO(jrm): this should get freed
+  ret[0] = NULL;
+  for (size_t row = 0; row < this->Height(); ++row) {
+    for (size_t col = 0; col < this->Width(); ++col) {
+      snprintf(ret, 256 * sizeof(char), "%s%.2f\t", ret, this->Get(row, col));
+    }
+    snprintf(ret, 256 * sizeof(char), "%s\n", ret);
+  }
+  return ret;
 }
 
 size_t Matrix::Height() {

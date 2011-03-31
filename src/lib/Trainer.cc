@@ -3,6 +3,7 @@
 #include "lib/RandomNumberGenerator.h"
 #include "lib/Trainer.h"
 #include "lib/LinearKernel.h"
+#include "lib/Log.h"
 
 namespace jason {
 
@@ -18,23 +19,24 @@ Trainer::~Trainer() {
 }
 
 void Trainer::Process() {
-//  TODO(jrm): Add proper debugging statements
-  printf("printing x before sphere:\n");
-  x->Print();
-  printf("end x before sphere.\n");
+  LOG(DEBUG, "== Beginning Trainer. ==\n\n");
+
+  LOG(DEBUG, "= printing x before sphere: =\n");
+  LOG(DEBUG, "%s", x->ToString());
+  LOG(DEBUG, "= end x before sphere. =\n\n");
 
   x->Sphere();
 
-  printf("printing x after sphere:\n");
-  x->Print();
-  printf("end x after sphere.\n");
+  LOG(DEBUG, "= printing x after sphere: =\n");
+  LOG(DEBUG, "%s", x->ToString());
+  LOG(DEBUG, "= end x after sphere. =\n\n");
 
   k = BuildKernel(x);
   k->Init();
 
-  printf("printing kernel:\n");
-  k->Print();
-  printf("end kernel.\n");
+  LOG(DEBUG, "= printing kernel: =\n");
+  LOG(DEBUG, "%s", k->ToString());
+  LOG(DEBUG, "= end kernel. =\n\n");
 
   InitializeYAW();
   for (int i = 0; i < 20; ++i) {
@@ -42,7 +44,12 @@ void Trainer::Process() {
     UpdateA(1.0, 1.0);
     UpdateY();
   }
-  w->Print();
+
+  LOG(DEBUG, "= printing w: =\n");
+  LOG(DEBUG, "%s", w->ToString());
+  LOG(DEBUG, "= end w. =\n\n");
+
+  LOG(DEBUG, "== End Trainer. ==\n");
 }
 
 Matrix *Trainer::GetW() {
