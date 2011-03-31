@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "lib/Matrix.h"
 #include "lib/Kernel.h"
