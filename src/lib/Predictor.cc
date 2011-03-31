@@ -9,10 +9,17 @@
 namespace jason {
 
 Predictor::Predictor(Matrix *w, Matrix *x_train, Matrix *x_predict) {
-//  Vector *v;     // Labels
-//  Matrix *prob;  // Class probabilities
+  printf("=== Predictor Constructor. ===\n");
+  x_predict->Sphere(x_train);
+  printf("sphered predict matrix:\n");
+  x_predict->Print();
   this->k = new LinearKernel(x_train, x_predict);
+  k->Init();
   this->w = w;
+  printf("kernel:\n");
+  k->Print();
+  printf("w:\n");
+  w->Print();
 }
 
 Predictor::~Predictor() {
@@ -30,9 +37,9 @@ void Predictor::QuadratureApproximation() {
   g->Process(3, &points, &weights);
   delete g;
 
-  for (size_t n = 0; n < w->Height(); ++n) {
+  for (size_t n = 0; n < k->Width(); ++n) {
     for (size_t i = 0; i < w->Width(); ++i) {
-      Vector *kn = k->Row(n);
+      Vector *kn = k->Column(n);
       Vector *wi = w->Column(i);
       double wikn = wi->Multiply(kn);
       double sum = 0;
@@ -47,7 +54,7 @@ void Predictor::QuadratureApproximation() {
         }  // for j
         sum += weights[k]*prod;
       }  // for k
-      printf("sample n=%zu, class i=%zu, value=%f", n, i, sum);
+      printf("sample n=%zu, class i=%zu, value=%f\n", n, i, sum);
     } // for i
   }  // for n
   delete r;

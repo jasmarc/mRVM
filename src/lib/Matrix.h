@@ -35,6 +35,7 @@ class Matrix {
     void SetColumn(size_t col, Vector *vec);
     void SetRow(size_t row, Vector *vec);
     void Sphere();
+    void Sphere(Matrix *other);
     void Print();
     Matrix* Multiply(Matrix *other);
     Vector* Multiply(Vector *vec);

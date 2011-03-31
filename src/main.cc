@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "lib/Matrix.h"
 #include "lib/Kernel.h"
@@ -10,8 +11,8 @@
 #include "lib/Predictor.h"
 #include "lib/GaussHermiteQuadrature.h"
 
-#define PACKAGE    "mRVM"
-#define VERSION    "0.0.1"
+#define PACKAGE "mRVM"
+#define VERSION "0.0.1"
 
 using jason::Matrix;
 using jason::Vector;
@@ -19,19 +20,35 @@ using jason::Trainer;
 using jason::Kernel;
 using jason::Predictor;
 using jason::GaussHermiteQuadrature;
+using jason::KernelType;
+using jason::LINEAR;
+using jason::POLYNOMIAL;
+using jason::GAUSSIAN;
 
 void print_help(int exval);
 void run();
+void handleKernelOption(KernelType & kernel);
 
 int main(int argc, char **argv) {
   int opt;
+  int long_opt_index = 0;
+  KernelType kernel = LINEAR;
+  int longval;
 
   // no arguments given
   if(argc == 1) {
     print_help(1);
   }
 
-  while((opt = getopt(argc, argv, "hVvf:o:")) != -1) {
+  struct option long_options[] = {
+      { "help",     0, NULL,      'h' },
+      { "version",  0, NULL,      'V' },
+      { "verbose",  0, NULL,      'v' },
+      { "kernel",   1, &longval,  'k' },
+      { 0,          0, 0,         0  }
+  };
+
+  while((opt = getopt_long(argc, argv, "hVvf:k:", long_options, &long_opt_index)) != -1) {
     switch(opt) {
     case 'h':
       print_help(0);
@@ -43,11 +60,12 @@ int main(int argc, char **argv) {
     case 'v':
       printf("%s: Verbose option is set `%c'\n", PACKAGE, optopt);
       break;
+    case 'k':
+      printf("%s: Kernel %s\n", PACKAGE, optarg);
+      handleKernelOption(kernel);
+    break;
     case 'f':
       printf("%s: Filename %s\n", PACKAGE, optarg);
-      break;
-    case 'o':
-      printf("Output: %s\n", optarg);
       break;
     case ':':
       fprintf(stderr, "%s: Error - Option `%c' needs a value\n\n", PACKAGE, optopt);
@@ -56,6 +74,13 @@ int main(int argc, char **argv) {
     case '?':
       fprintf(stderr, "%s: Error - No such option: `%c'\n\n", PACKAGE, optopt);
       print_help(1);
+    case 0:
+      switch (longval) {
+      case 'k':
+        printf("%s: Kernel %s\n", PACKAGE, optarg);
+        handleKernelOption(kernel);
+        break;
+      }
     }
   }
 
@@ -68,16 +93,26 @@ int main(int argc, char **argv) {
   return 0;
 }
 
+void handleKernelOption(KernelType &kernel) {
+  if (strcmp(optarg, "LINEAR") == 0) {
+    kernel = LINEAR;
+  } else if (strcmp(optarg, "POLYNOMIAL") == 0) {
+    kernel = POLYNOMIAL;
+  } else if (strcmp(optarg, "GAUSSIAN") == 0) {
+    kernel = GAUSSIAN;
+  }
+}
+
 void print_help(int exval) {
   printf("%s, %s multi-class multi-kernel Relevance Vector Machines (mRVM)\n", PACKAGE, VERSION);
   printf("%s [-h] [-V] [-f FILE] [-o FILE]\n\n", PACKAGE);
 
-  printf("  -h              print this help and exit\n");
-  printf("  -V              print version and exit\n\n");
+  printf("  -h, --help      print this help and exit\n");
+  printf("  -V, --version   print version and exit\n\n");
 
-  printf("  -v              set verbose flag\n");
+  printf("  -v, --verbose   set verbose flag\n");
+  printf("  -k, --kernel    specify the kernel: LINEAR, POLYNOMIAL, GAUSSIAN\n");
   printf("  -f FILE         set input file\n");
-  printf("  -o FILE         set output file\n\n");
 
   printf("Based upon work by Psorakis, Damoulas, Girolami.\n");
   printf("Implementation by Damoulas and Marcell, {damoulas, jrm425}@cs.cornell.edu\n\n");
@@ -87,16 +122,27 @@ void print_help(int exval) {
 
 void run()
 {
-    double m1_arr[] = {1, 2, 9, 4, 6, 5, 3, 7, 4, 6, 2, 0};
-    double m2_arr[] = {1, 2, 9, 4, 6, 5, 6, 2, 0};
-    double v_arr[] = {0, 1, 0, 3};
+    double m1_arr[] =  {1, 0.9,
+                        0.8, 0.9,
+                        0.5, 0.6,
+                        0.1, 0.2,
+                        0.2, 0.3};
+
+    double m2_arr[] =  {1, 0.9,
+        0.8, 0.9,
+        0.1, 0.2,
+        0.2, 0.3,
+        0.7, 0.7};
+
+    double v_arr[] = {0, 0, 0, 1, 1};
+
     printf("Starting...\n");
-    Matrix *m1 = new Matrix(m1_arr, 4, 3);
-    Vector *v = new Vector(v_arr, 4);
-    Trainer *t = new Trainer(m1, v, 4);
+    Matrix *m1 = new Matrix(m1_arr, 5, 2);
+    Vector *v = new Vector(v_arr, 5);
+    Trainer *t = new Trainer(m1, v, 2);
     t->Process();
-    Matrix *m2 = new Matrix(m2_arr, 3, 3);
-    Predictor *p = new Predictor(t->GetW(), v, m1, m2);
+    Matrix *m2 = new Matrix(m2_arr, 5, 2);
+    Predictor *p = new Predictor(t->GetW(), m1, m2);
     p->Predict();
     printf("End.\n");
 }

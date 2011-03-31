@@ -18,8 +18,24 @@ Trainer::~Trainer() {
 }
 
 void Trainer::Process() {
+//  TODO(jrm): Add proper debugging statements
+  printf("printing x before sphere:\n");
+  x->Print();
+  printf("end x before sphere.\n");
+
   x->Sphere();
+
+  printf("printing x after sphere:\n");
+  x->Print();
+  printf("end x after sphere.\n");
+
   k = BuildKernel(x);
+  k->Init();
+
+  printf("printing kernel:\n");
+  k->Print();
+  printf("end kernel.\n");
+
   InitializeYAW();
   for (int i = 0; i < 20; ++i) {
     UpdateW();
@@ -69,15 +85,16 @@ void Trainer::UpdateA(double tau, double v) {
 }
 
 void Trainer::UpdateW() {
+  Matrix *w_temp;
   for (size_t col = 0; col < classes; ++col) {
     Vector *A_c = a->Column(col);
     Matrix *A = new Matrix(A_c);
     Vector *Y_c = y->Column(col);
-    w = k->Multiply(k);
-    w->Add(A);
-    w->Invert();
-    w = w->Multiply(k);
-    Vector *W_c = w->Multiply(Y_c);
+    w_temp = k->Multiply(k);
+    w_temp->Add(A);
+    w_temp->Invert();
+    w_temp = w_temp->Multiply(k);
+    Vector *W_c = w_temp->Multiply(Y_c);
     w->SetColumn(col, W_c);
     delete W_c;
     delete Y_c;

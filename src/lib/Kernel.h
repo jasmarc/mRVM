@@ -9,12 +9,18 @@ namespace jason {
 
 class Matrix;
 
+enum KernelType { LINEAR, POLYNOMIAL, GAUSSIAN };
+
 class Kernel: public jason::Matrix {
   public:
     Kernel();
     Kernel(Matrix *m1, Matrix *m2);
     virtual ~Kernel();
+    void Init();
     virtual double KernelElementFunction(Vector *vec1, Vector *vec2) = 0;
+  protected:
+    Matrix *m1;
+    Matrix *m2;
 };
 }
 

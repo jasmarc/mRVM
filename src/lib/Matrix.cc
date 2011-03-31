@@ -105,12 +105,17 @@ void Matrix::SetColumn(size_t col, Vector *vec) {
   gsl_matrix_set_col(m, col, vec->v);
 }
 
+//  TODO(jrm): fix for general purpose sphering
 void Matrix::Sphere() {
+  Sphere(this);
+}
+
+void Matrix::Sphere(Matrix *other) {
   size_t height = this->Height();
   size_t width = this->Width();
   Vector *vec;
   for (size_t col = 0; col < width; ++col) {
-    vec = this->Column(col);
+    vec = other->Column(col);
     double mean = gsl_stats_mean(vec->v->data, 1, height);
     double stdev = gsl_stats_sd(vec->v->data, 1, height);
     gsl_vector_add_constant(vec->v, -mean);
