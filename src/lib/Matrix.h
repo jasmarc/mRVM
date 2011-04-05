@@ -36,6 +36,10 @@ class Matrix {
     void SetRow(size_t row, Vector *vec);
     void Sphere();
     void Sphere(Matrix *other);
+    void NormalizeResults();
+    void CacheMeansAndStdevs();
+    Vector* GetMeans();
+    Vector* GetStdevs();
     void Print();
     char *ToString();
     Matrix* Multiply(Matrix *other);
@@ -48,6 +52,8 @@ class Matrix {
     int NumberOfColumns(FILE *f);
     gsl_matrix *CloneGSLMatrix();
     gsl_matrix* m;
+    Vector *means;
+    Vector *stdevs;
 };
 }
 

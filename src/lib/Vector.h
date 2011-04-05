@@ -13,10 +13,12 @@ class Matrix;
 
 class Vector {
   public:
+    explicit Vector(size_t size);
     explicit Vector(double *data, size_t size);
     virtual ~Vector();
     size_t Size();
     double Get(size_t elem);
+    void Set(size_t elem, double value);
     Matrix *RepmatVert(size_t k);
     Matrix *RepmatHoriz(size_t k);
     double Multiply(Vector *other);

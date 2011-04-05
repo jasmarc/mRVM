@@ -4,6 +4,10 @@
 
 namespace jason {
 
+Vector::Vector(size_t size) {
+  this->v = gsl_vector_alloc(size);
+}
+
 Vector::Vector(double *data, size_t size) {
   this->v = gsl_vector_alloc(size);
   for (size_t i = 0; i < size; ++i) {
@@ -28,6 +32,10 @@ size_t Vector::Size() {
 
 double Vector::Get(size_t elem) {
   return gsl_vector_get(this->v, elem);
+}
+
+void Vector::Set(size_t elem, double value) {
+  gsl_vector_set(this->v, elem, value);
 }
 
 Matrix *Vector::RepmatVert(size_t k) {

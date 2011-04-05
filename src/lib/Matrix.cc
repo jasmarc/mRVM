@@ -5,6 +5,7 @@
 #include <gsl/gsl_statistics.h>
 
 #include "lib/Matrix.h"
+#include "lib/Log.h"
 
 namespace jason {
 
@@ -107,22 +108,74 @@ void Matrix::SetColumn(size_t col, Vector *vec) {
 
 //  TODO(jrm): fix for general purpose sphering
 void Matrix::Sphere() {
+  LOG(DEBUG, "= Calling sphere with no params =\n");
   Sphere(this);
 }
 
 void Matrix::Sphere(Matrix *other) {
-  size_t height = this->Height();
   size_t width = this->Width();
-  Vector *vec;
+  Vector *vec_other;
+  Vector *vec_self;
+  LOG(DEBUG, "= Start sphere =\n");
+  LOG(DEBUG, "= this =\n");
+  LOG(DEBUG, "%s", this->ToString());
+  LOG(DEBUG, "= other =\n");
+  LOG(DEBUG, "%s", other->ToString());
+  LOG(DEBUG, "= starting loop =\n");
   for (size_t col = 0; col < width; ++col) {
-    vec = other->Column(col);
+    vec_other = other->Column(col);
+    vec_self = this->Column(col);
+    double mean = other->GetMeans()->Get(col);
+    double stdev = other->GetStdevs()->Get(col);
+    LOG(DEBUG, "col = %zu, mean = %f, stdev = %f\n", col, mean, stdev);
+    gsl_vector_add_constant(vec_self->v, -mean);
+    gsl_vector_scale(vec_self->v, 1.0 / stdev);
+    gsl_matrix_set_col(m, col, vec_self->v);
+    delete vec_other;
+    delete vec_self;
+  }
+  LOG(DEBUG, "= this =\n");
+  LOG(DEBUG, "%s", this->ToString());
+  LOG(DEBUG, "= End sphere =\n");
+}
+
+void Matrix::NormalizeResults() {
+  LOG(DEBUG, "= Start normalize results. =");
+  for (size_t row = 0; row < this->Height(); ++row) {
+    float sum = 0;
+    for (size_t col = 0; col < this->Width(); ++col) {
+      sum += this->Get(row, col);
+    }
+    for (size_t col = 0; col < this->Width(); ++col) {
+      float val = this->Get(row, col);
+      this->Set(row, col, val / sum);
+    }
+  }
+  LOG(DEBUG, "= End normalize results. =");
+}
+
+void Matrix::CacheMeansAndStdevs() {
+  size_t width = this->Width();
+  size_t height = this->Height();
+  means = new Vector(width);
+  stdevs = new Vector(width);
+  for (size_t col = 0; col < width; ++col) {
+    Vector *vec = this->Column(col);
     double mean = gsl_stats_mean(vec->v->data, 1, height);
+    // gsl_vector_add_constant(vec->v, -mean);
     double stdev = gsl_stats_sd(vec->v->data, 1, height);
-    gsl_vector_add_constant(vec->v, -mean);
-    gsl_vector_scale(vec->v, 1.0 / stdev);
-    gsl_matrix_set_col(m, col, vec->v);
+    means->Set(col, mean);
+    stdevs->Set(col, stdev);
     delete vec;
   }
+}
+
+Vector* Matrix::GetMeans() {
+  return means;
+}
+
+Vector* Matrix::GetStdevs() {
+  return stdevs;
 }
 
 void Matrix::Print() {  // TODO(jrm): turn into ToString

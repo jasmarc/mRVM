@@ -21,10 +21,11 @@ Trainer::~Trainer() {
 void Trainer::Process() {
   LOG(DEBUG, "== Beginning Trainer. ==\n\n");
 
-  LOG(DEBUG, "= printing x before sphere: =\n");
-  LOG(DEBUG, "%s", x->ToString());
-  LOG(DEBUG, "= end x before sphere. =\n\n");
+  LOG(VERBOSE, "= printing x_train before sphere: =\n");
+  LOG(VERBOSE, "%s", x->ToString());
+  LOG(VERBOSE, "= end x_train before sphere. =\n\n");
 
+  x->CacheMeansAndStdevs();
   x->Sphere();
 
   LOG(DEBUG, "= printing x after sphere: =\n");

@@ -12,9 +12,9 @@ namespace jason {
 Predictor::Predictor(Matrix *w, Matrix *x_train, Matrix *x_predict) {
   LOG(DEBUG, "== Beginning Predictor Constructor. ==\n\n");
 
-  LOG(DEBUG, "= printing x_predict before sphere: =\n");
-  LOG(DEBUG, "%s", x_predict->ToString());
-  LOG(DEBUG, "= end x_predict before sphere. =\n\n");
+  LOG(VERBOSE, "= printing x_predict before sphere: =\n");
+  LOG(VERBOSE, "%s", x_predict->ToString());
+  LOG(VERBOSE, "= end x_predict before sphere. =\n\n");
 
   x_predict->Sphere(x_train);
 
@@ -25,9 +25,9 @@ Predictor::Predictor(Matrix *w, Matrix *x_train, Matrix *x_predict) {
   this->k = new LinearKernel(x_train, x_predict);
   k->Init();
 
-  LOG(DEBUG, "= printing k: =\n");
-  LOG(DEBUG, "%s", k->ToString());
-  LOG(DEBUG, "= end k. =\n\n");
+  LOG(VERBOSE, "= printing k: =\n");
+  LOG(VERBOSE, "%s", k->ToString());
+  LOG(VERBOSE, "= end k. =\n\n");
 
   this->w = w;
 
@@ -42,10 +42,14 @@ Predictor::~Predictor() {
 }
 
 void Predictor::Predict() {
-  this->QuadratureApproximation();  // TODO(jrm): remove middle man
+  Matrix *predictions = QuadratureApproximation();  // TODO(jrm): remove middle man
+  predictions->NormalizeResults();
+  LOG(NORMAL, "= predictions: =\n");
+  LOG(NORMAL, "%s", predictions->ToString());
+  LOG(NORMAL, "= end predictions. =\n\n");
 }
 
-void Predictor::QuadratureApproximation() {
+Matrix* Predictor::QuadratureApproximation() {
   RandomNumberGenerator *r = new RandomNumberGenerator();
   GaussHermiteQuadrature *g = new GaussHermiteQuadrature();
   double *points;
@@ -53,6 +57,7 @@ void Predictor::QuadratureApproximation() {
   g->Process(3, &points, &weights);
   delete g;
 
+  Matrix *result = new Matrix(k->Width(), w->Width());
   for (size_t n = 0; n < k->Width(); ++n) {
     for (size_t i = 0; i < w->Width(); ++i) {
       Vector *kn = k->Column(n);
@@ -70,9 +75,11 @@ void Predictor::QuadratureApproximation() {
         }  // for j
         sum += weights[k]*prod;
       }  // for k
-      LOG(NORMAL, "sample n=%zu, class i=%zu, value=%f\n", n, i, sum);
+      LOG(DEBUG, "sample n=%zu, class i=%zu, value=%f\n", n, i, sum);
+      result->Set(n, i, sum);
     } // for i
   }  // for n
   delete r;
+  return result;
 }
 }
