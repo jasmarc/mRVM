@@ -42,7 +42,7 @@ Predictor::~Predictor() {
 }
 
 void Predictor::Predict() {
-  Matrix *predictions = QuadratureApproximation();  // TODO(jrm): remove middle man
+  Matrix *predictions = QuadratureApproximation();
   predictions->NormalizeResults();
   LOG(NORMAL, "= predictions: =\n");
   LOG(NORMAL, "%s", predictions->ToString());
@@ -77,7 +77,7 @@ Matrix* Predictor::QuadratureApproximation() {
       }  // for k
       LOG(DEBUG, "sample n=%zu, class i=%zu, value=%f\n", n, i, sum);
       result->Set(n, i, sum);
-    } // for i
+    }  // for i
   }  // for n
   delete r;
   return result;

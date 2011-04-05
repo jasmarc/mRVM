@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
   int longval;
 
   // no arguments given
-  if(argc == 1) {
+  if (argc == 1) {
     print_help(1);
   }
 
@@ -52,8 +52,9 @@ int main(int argc, char **argv) {
       { 0,          0, 0,         0  }
   };
 
-  while((opt = getopt_long(argc, argv, "hVvf:k:", long_options, &long_opt_index)) != -1) {
-    switch(opt) {
+  while ((opt = getopt_long(argc, argv, "hVvf:k:", long_options,
+    &long_opt_index)) != -1) {
+    switch (opt) {
     case 'h':
       print_help(0);
       break;
@@ -72,7 +73,8 @@ int main(int argc, char **argv) {
       printf("%s: Filename %s\n", PACKAGE, optarg);
       break;
     case ':':
-      fprintf(stderr, "%s: Error - Option `%c' needs a value\n\n", PACKAGE, optopt);
+      fprintf(stderr, "%s: Error - Option `%c' needs a value\n\n", PACKAGE,
+        optopt);
       print_help(1);
       break;
     case '?':
@@ -89,7 +91,7 @@ int main(int argc, char **argv) {
   }
 
   // print all remaining options
-  for(; optind < argc; optind++)
+  for (; optind < argc; optind++)
     printf("argument: %s\n", argv[optind]);
 
   run();
@@ -108,7 +110,8 @@ void handleKernelOption(KernelType &kernel) {
 }
 
 void print_help(int exval) {
-  printf("%s, %s multi-class multi-kernel Relevance Vector Machines (mRVM)\n", PACKAGE, VERSION);
+  printf("%s, %s multi-class multi-kernel Relevance Vector Machines (mRVM)\n",
+    PACKAGE, VERSION);
   printf("%s [-h] [-V] [-f FILE] [-o FILE]\n\n", PACKAGE);
 
   printf("  -h, --help      print this help and exit\n");
@@ -124,8 +127,7 @@ void print_help(int exval) {
   exit(exval);
 }
 
-void run()
-{
+void run() {
   // The number of classes
   const size_t CLASSES = 2;
 

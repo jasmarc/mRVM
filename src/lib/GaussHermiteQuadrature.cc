@@ -1,33 +1,33 @@
 // Copyright 2011 Jason Marcell
 
-# include <cstdlib>
-# include <cstdio>
-# include <cmath>
-# include <iostream>
-# include <fstream>
-# include <iomanip>
-# include <ctime>
-# include <cstring>
+#include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <xlocale.h>
+
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <iomanip>
 
 #include "lib/GaussHermiteQuadrature.h"
-
-using namespace std;
 
 namespace jason {
 
 GaussHermiteQuadrature::GaussHermiteQuadrature() {
-  // TODO Auto-generated constructor stub
-
 }
 
 GaussHermiteQuadrature::~GaussHermiteQuadrature() {
-  // TODO Auto-generated destructor stub
 }
 
 // HERMITE_RULE
 //   Compute a Gauss-Hermite quadrature rule for approximating
 //
-//     Integral ( -oo < x < +oo ) f(x) exp ( - b * ( x - a )^2 ) dx
+//     Integral(-oo < x < +oo)f(x) exp(- b *(x - a)^2)dx
 //
 //   of order ORDER.
 //
@@ -58,29 +58,13 @@ void GaussHermiteQuadrature::Process(int order, double **x, double **w) {
   double *r = new double[2];
   r[0] = -r8_huge();
   r[1] = r8_huge();
-
-//  Vector *w_vec = new Vector(w, order);
-//  Vector *x_vec = new Vector(x, order);
-//  Vector *r_vec = new Vector(r, 2);
-//
-//  w_vec->Print();
-//  x_vec->Print();
-//
-//  delete[] r;
-//  delete[] w;
-//  delete[] x;
 }
 
-//****************************************************************************80
-
-void GaussHermiteQuadrature::cdgqf ( int nt, int kind, double alpha, double beta, double t[],
-  double wts[] )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
-//    CDGQF computes a Gauss quadrature formula with default A, B and simple knots.
+//    CDGQF computes a Gauss quadrature formula with default A, B and simple
+//    knots.
 //
 //  Discussion:
 //
@@ -135,35 +119,31 @@ void GaussHermiteQuadrature::cdgqf ( int nt, int kind, double alpha, double beta
 //
 //    Output, double WTS[NT], the weights.
 //
-{
+void GaussHermiteQuadrature::cdgqf(int nt, int kind, double alpha, double beta,
+    double t[], double wts[]) {
   double *aj;
   double *bj;
   double zemu;
 
-  parchk ( kind, 2 * nt, alpha, beta );
-//
-//  Get the Jacobi matrix and zero-th moment.
-//
+  parchk(kind, 2 * nt, alpha, beta);
+  //
+  //  Get the Jacobi matrix and zero-th moment.
+  //
   aj = new double[nt];
   bj = new double[nt];
 
-  zemu = class_matrix ( kind, nt, alpha, beta, aj, bj );
-//
-//  Compute the knots and weights.
-//
-  sgqf ( nt, aj, bj, zemu, t, wts );
+  zemu = class_matrix(kind, nt, alpha, beta, aj, bj);
+  //
+  //  Compute the knots and weights.
+  //
+  sgqf(nt, aj, bj, zemu, t, wts);
 
-  delete [] aj;
-  delete [] bj;
+  delete[] aj;
+  delete[] bj;
 
   return;
 }
-//****************************************************************************80
 
-void GaussHermiteQuadrature::cgqf ( int nt, int kind, double alpha, double beta, double a, double b,
-  double t[], double wts[] )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -224,41 +204,35 @@ void GaussHermiteQuadrature::cgqf ( int nt, int kind, double alpha, double beta,
 //
 //    Output, double WTS[NT], the weights.
 //
-{
+void GaussHermiteQuadrature::cgqf(int nt, int kind, double alpha, double beta,
+    double a, double b, double t[], double wts[]) {
   int i;
   int *mlt;
   int *ndx;
-//
-//  Compute the Gauss quadrature formula for default values of A and B.
-//
-  cdgqf ( nt, kind, alpha, beta, t, wts );
-//
-//  Prepare to scale the quadrature formula to other weight function with
-//  valid A and B.
-//
+  //
+  //  Compute the Gauss quadrature formula for default values of A and B.
+  //
+  cdgqf(nt, kind, alpha, beta, t, wts);
+  //
+  //  Prepare to scale the quadrature formula to other weight function with
+  //  valid A and B.
+  //
   mlt = new int[nt];
-  for ( i = 0; i < nt; i++ )
-  {
+  for (i = 0; i < nt; i++) {
     mlt[i] = 1;
   }
   ndx = new int[nt];
-  for ( i = 0; i < nt; i++ )
-  {
+  for (i = 0; i < nt; i++) {
     ndx[i] = i + 1;
   }
-  scqf ( nt, t, mlt, wts, nt, ndx, wts, t, kind, alpha, beta, a, b );
+  scqf(nt, t, mlt, wts, nt, ndx, wts, t, kind, alpha, beta, a, b);
 
-  delete [] mlt;
-  delete [] ndx;
+  delete[] mlt;
+  delete[] ndx;
 
   return;
 }
-//****************************************************************************80
 
-double GaussHermiteQuadrature::class_matrix ( int kind, int m, double alpha, double beta, double aj[],
-  double bj[] )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -321,7 +295,8 @@ double GaussHermiteQuadrature::class_matrix ( int kind, int m, double alpha, dou
 //
 //    Output, double CLASS_MATRIX, the zero-th moment.
 //
-{
+double GaussHermiteQuadrature::class_matrix(int kind, int m, double alpha,
+    double beta, double aj[], double bj[]) {
   double a2b2;
   double ab;
   double aba;
@@ -335,167 +310,130 @@ double GaussHermiteQuadrature::class_matrix ( int kind, int m, double alpha, dou
   double temp2;
   double zemu;
 
-  temp = r8_epsilon ( );
+  temp = r8_epsilon();
 
-  parchk ( kind, 2 * m - 1, alpha, beta );
+  parchk(kind, 2 * m - 1, alpha, beta);
 
   temp2 = 0.5;
 
-  if ( 500.0 * temp < r8_abs ( pow ( gamma ( temp2 ), 2 ) - pi ) )
-  {
-    cout << "\n";
-    cout << "CLASS_MATRIX - Fatal error!\n";
-    cout << "  Gamma function does not match machine parameters.\n";
-    exit ( 1 );
+  if (500.0 * temp < r8_abs(pow(gamma(temp2), 2) - pi)) {
+    printf("\n");
+    printf("CLASS_MATRIX - Fatal error!\n");
+    printf("  Gamma function does not match machine parameters.\n");
+    exit(1);
   }
 
-  if ( kind == 1 )
-  {
+  if (kind == 1) {
     ab = 0.0;
 
-    zemu = 2.0 / ( ab + 1.0 );
+    zemu = 2.0 / (ab + 1.0);
 
-    for ( i = 0; i < m; i++ )
-    {
+    for (i = 0; i < m; i++) {
       aj[i] = 0.0;
     }
 
-    for ( i = 1; i <= m; i++ )
-    {
-      abi = i + ab * ( i % 2 );
+    for (i = 1; i <= m; i++) {
+      abi = i + ab * (i % 2);
       abj = 2 * i + ab;
-      bj[i-1] = sqrt ( abi * abi / ( abj * abj - 1.0 ) );
+      bj[i - 1] = sqrt(abi * abi / (abj * abj - 1.0));
     }
-  }
-  else if ( kind == 2 )
-  {
+  } else if (kind == 2) {
     zemu = pi;
 
-    for ( i = 0; i < m; i++ )
-    {
+    for (i = 0; i < m; i++) {
       aj[i] = 0.0;
     }
 
-    bj[0] =  sqrt ( 0.5 );
-    for ( i = 1; i < m; i++ )
-    {
+    bj[0] = sqrt(0.5);
+    for (i = 1; i < m; i++) {
       bj[i] = 0.5;
     }
-  }
-  else if ( kind == 3 )
-  {
+  } else if (kind == 3) {
     ab = alpha * 2.0;
-    zemu = pow ( 2.0, ab + 1.0 ) * pow ( gamma ( alpha + 1.0 ), 2 )
-      / gamma ( ab + 2.0 );
+    zemu = pow(2.0, ab + 1.0) * pow(gamma(alpha + 1.0), 2) / gamma(ab + 2.0);
 
-    for ( i = 0; i < m; i++ )
-    {
+    for (i = 0; i < m; i++) {
       aj[i] = 0.0;
     }
 
-    bj[0] = sqrt ( 1.0 / ( 2.0 * alpha + 3.0 ) );
-    for ( i = 2; i <= m; i++ )
-    {
-      bj[i-1] = sqrt ( i * ( i + ab ) / ( 4.0 * pow ( i + alpha, 2 ) - 1.0 ) );
+    bj[0] = sqrt(1.0 / (2.0 * alpha + 3.0));
+    for (i = 2; i <= m; i++) {
+      bj[i - 1] = sqrt(i * (i + ab) / (4.0 * pow(i + alpha, 2) - 1.0));
     }
-  }
-  else if ( kind == 4 )
-  {
+  } else if (kind == 4) {
     ab = alpha + beta;
     abi = 2.0 + ab;
-    zemu = pow ( 2.0, ab + 1.0 ) * gamma ( alpha + 1.0 )
-      * gamma ( beta + 1.0 ) / gamma ( abi );
-    aj[0] = ( beta - alpha ) / abi;
-    bj[0] = sqrt ( 4.0 * ( 1.0 + alpha ) * ( 1.0 + beta )
-      / ( ( abi + 1.0 ) * abi * abi ) );
+    zemu = pow(2.0, ab + 1.0) * gamma(alpha + 1.0) * gamma(beta + 1.0) / gamma(
+        abi);
+    aj[0] = (beta - alpha) / abi;
+    bj[0]
+        = sqrt(4.0 * (1.0 + alpha) * (1.0 + beta) / ((abi + 1.0) * abi * abi));
     a2b2 = beta * beta - alpha * alpha;
 
-    for ( i = 2; i <= m; i++ )
-    {
+    for (i = 2; i <= m; i++) {
       abi = 2.0 * i + ab;
-      aj[i-1] = a2b2 / ( ( abi - 2.0 ) * abi );
+      aj[i - 1] = a2b2 / ((abi - 2.0) * abi);
       abi = abi * abi;
-      bj[i-1] = sqrt ( 4.0 * i * ( i + alpha ) * ( i + beta ) * ( i + ab )
-        / ( ( abi - 1.0 ) * abi ) );
+      bj[i - 1] = sqrt(
+          4.0 * i * (i + alpha) * (i + beta) * (i + ab) / ((abi - 1.0) * abi));
     }
-  }
-  else if ( kind == 5 )
-  {
-    zemu = gamma ( alpha + 1.0 );
+  } else if (kind == 5) {
+    zemu = gamma(alpha + 1.0);
 
-    for ( i = 1; i <= m; i++ )
-    {
-      aj[i-1] = 2.0 * i - 1.0 + alpha;
-      bj[i-1] = sqrt ( i * ( i + alpha ) );
+    for (i = 1; i <= m; i++) {
+      aj[i - 1] = 2.0 * i - 1.0 + alpha;
+      bj[i - 1] = sqrt(i * (i + alpha));
     }
-  }
-  else if ( kind == 6 )
-  {
-    zemu = gamma ( ( alpha + 1.0 ) / 2.0 );
+  } else if (kind == 6) {
+    zemu = gamma((alpha + 1.0) / 2.0);
 
-    for ( i = 0; i < m; i++ )
-    {
+    for (i = 0; i < m; i++) {
       aj[i] = 0.0;
     }
 
-    for ( i = 1; i <= m; i++ )
-    {
-      bj[i-1] = sqrt ( ( i + alpha * ( i % 2 ) ) / 2.0 );
+    for (i = 1; i <= m; i++) {
+      bj[i - 1] = sqrt((i + alpha * (i % 2)) / 2.0);
     }
-  }
-  else if ( kind == 7 )
-  {
+  } else if (kind == 7) {
     ab = alpha;
-    zemu = 2.0 / ( ab + 1.0 );
+    zemu = 2.0 / (ab + 1.0);
 
-    for ( i = 0; i < m; i++ )
-    {
+    for (i = 0; i < m; i++) {
       aj[i] = 0.0;
     }
 
-    for ( i = 1; i <= m; i++ )
-    {
-      abi = i + ab * ( i % 2 );
+    for (i = 1; i <= m; i++) {
+      abi = i + ab * (i % 2);
       abj = 2 * i + ab;
-      bj[i-1] = sqrt ( abi * abi / ( abj * abj - 1.0 ) );
+      bj[i - 1] = sqrt(abi * abi / (abj * abj - 1.0));
     }
-  }
-  else if ( kind == 8 )
-  {
+  } else if (kind == 8) {
     ab = alpha + beta;
-    zemu = gamma ( alpha + 1.0 ) * gamma ( - ( ab + 1.0 ) )
-      / gamma ( - beta );
+    zemu = gamma(alpha + 1.0) * gamma(-(ab + 1.0)) / gamma(-beta);
     apone = alpha + 1.0;
     aba = ab * apone;
-    aj[0] = - apone / ( ab + 2.0 );
-    bj[0] = - aj[0] * ( beta + 1.0 ) / ( ab + 2.0 ) / ( ab + 3.0 );
-    for ( i = 2; i <= m; i++ )
-    {
+    aj[0] = -apone / (ab + 2.0);
+    bj[0] = -aj[0] * (beta + 1.0) / (ab + 2.0) / (ab + 3.0);
+    for (i = 2; i <= m; i++) {
       abti = ab + 2.0 * i;
-      aj[i-1] = aba + 2.0 * ( ab + i ) * ( i - 1 );
-      aj[i-1] = - aj[i-1] / abti / ( abti - 2.0 );
+      aj[i - 1] = aba + 2.0 * (ab + i) * (i - 1);
+      aj[i - 1] = -aj[i - 1] / abti / (abti - 2.0);
     }
 
-    for ( i = 2; i <= m - 1; i++ )
-    {
+    for (i = 2; i <= m - 1; i++) {
       abti = ab + 2.0 * i;
-      bj[i-1] = i * ( alpha + i ) / ( abti - 1.0 ) * ( beta + i )
-        / ( abti * abti ) * ( ab + i ) / ( abti + 1.0 );
+      bj[i - 1] = i * (alpha + i) / (abti - 1.0) * (beta + i) / (abti * abti)
+          * (ab + i) / (abti + 1.0);
     }
-    bj[m-1] = 0.0;
-    for ( i = 0; i < m; i++ )
-    {
-      bj[i] =  sqrt ( bj[i] );
+    bj[m - 1] = 0.0;
+    for (i = 0; i < m; i++) {
+      bj[i] = sqrt(bj[i]);
     }
   }
 
   return zemu;
 }
-//****************************************************************************80
 
-void GaussHermiteQuadrature::imtqlx ( int n, double d[], double e[], double z[] )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -510,8 +448,8 @@ void GaussHermiteQuadrature::imtqlx ( int n, double d[], double e[], double z[] 
 //    routine.
 //
 //    It has been modified to produce the product Q' * Z, where Z is an input
-//    vector and Q is the orthogonal matrix diagonalizing the input matrix.
-//    The changes consist (essentialy) of applying the orthogonal transformations
+//    vector and Q is the orthogonal matrix diagonalizing the input matrix. The
+//    changes consist (essentialy) of applying the orthogonal transformations
 //    directly to Z as they are generated.
 //
 //  Licensing:
@@ -555,7 +493,7 @@ void GaussHermiteQuadrature::imtqlx ( int n, double d[], double e[], double z[] 
 //    the value of Q' * Z, where Q is the matrix that diagonalizes the
 //    input symmetric tridiagonal matrix.
 //
-{
+void GaussHermiteQuadrature::imtqlx(int n, double d[], double e[], double z[]) {
   double b;
   double c;
   double f;
@@ -573,123 +511,103 @@ void GaussHermiteQuadrature::imtqlx ( int n, double d[], double e[], double z[] 
   double r;
   double s;
 
-  prec = r8_epsilon ( );
+  prec = r8_epsilon();
 
-  if ( n == 1 )
-  {
+  if (n == 1) {
     return;
   }
 
-  e[n-1] = 0.0;
+  e[n - 1] = 0.0;
 
-  for ( l = 1; l <= n; l++ )
-  {
+  for (l = 1; l <= n; l++) {
     j = 0;
-    for ( ; ; )
-    {
-      for ( m = l; m <= n; m++ )
-      {
-        if ( m == n )
-        {
+    for (;;) {
+      for (m = l; m <= n; m++) {
+        if (m == n) {
           break;
         }
 
-        if ( r8_abs ( e[m-1] ) <= prec * ( r8_abs ( d[m-1] ) + r8_abs ( d[m] ) ) )
-        {
+        if (r8_abs(e[m - 1]) <= prec * (r8_abs(d[m - 1]) + r8_abs(d[m]))) {
           break;
         }
       }
-      p = d[l-1];
-      if ( m == l )
-      {
+      p = d[l - 1];
+      if (m == l) {
         break;
       }
-      if ( itn <= j )
-      {
-        cout << "\n";
-        cout << "IMTQLX - Fatal error!\n";
-        cout << "  Iteration limit exceeded\n";
-        exit ( 1 );
+      if (itn <= j) {
+        printf("\n");
+        printf("IMTQLX - Fatal error!\n");
+        printf("  Iteration limit exceeded\n");
+        exit(1);
       }
       j = j + 1;
-      g = ( d[l] - p ) / ( 2.0 * e[l-1] );
-      r =  sqrt ( g * g + 1.0 );
-      g = d[m-1] - p + e[l-1] / ( g + r8_abs ( r ) * r8_sign ( g ) );
+      g = (d[l] - p) / (2.0 * e[l - 1]);
+      r = sqrt(g * g + 1.0);
+      g = d[m - 1] - p + e[l - 1] / (g + r8_abs(r) * r8_sign(g));
       s = 1.0;
       c = 1.0;
       p = 0.0;
       mml = m - l;
 
-      for ( ii = 1; ii <= mml; ii++ )
-      {
+      for (ii = 1; ii <= mml; ii++) {
         i = m - ii;
-        f = s * e[i-1];
-        b = c * e[i-1];
+        f = s * e[i - 1];
+        b = c * e[i - 1];
 
-        if ( r8_abs ( g ) <= r8_abs ( f ) )
-        {
+        if (r8_abs(g) <= r8_abs(f)) {
           c = g / f;
-          r =  sqrt ( c * c + 1.0 );
+          r = sqrt(c * c + 1.0);
           e[i] = f * r;
           s = 1.0 / r;
           c = c * s;
-        }
-        else
-        {
+        } else {
           s = f / g;
-          r =  sqrt ( s * s + 1.0 );
+          r = sqrt(s * s + 1.0);
           e[i] = g * r;
           c = 1.0 / r;
           s = s * c;
         }
         g = d[i] - p;
-        r = ( d[i-1] - g ) * s + 2.0 * c * b;
+        r = (d[i - 1] - g) * s + 2.0 * c * b;
         p = s * r;
         d[i] = g + p;
         g = c * r - b;
         f = z[i];
-        z[i] = s * z[i-1] + c * f;
-        z[i-1] = c * z[i-1] - s * f;
+        z[i] = s * z[i - 1] + c * f;
+        z[i - 1] = c * z[i - 1] - s * f;
       }
-      d[l-1] = d[l-1] - p;
-      e[l-1] = g;
-      e[m-1] = 0.0;
+      d[l - 1] = d[l - 1] - p;
+      e[l - 1] = g;
+      e[m - 1] = 0.0;
     }
   }
-//
-//  Sorting.
-//
-  for ( ii = 2; ii <= m; ii++ )
-  {
+  //
+  //  Sorting.
+  //
+  for (ii = 2; ii <= m; ii++) {
     i = ii - 1;
     k = i;
-    p = d[i-1];
+    p = d[i - 1];
 
-    for ( j = ii; j <= n; j++ )
-    {
-      if ( d[j-1] < p )
-      {
-         k = j;
-         p = d[j-1];
+    for (j = ii; j <= n; j++) {
+      if (d[j - 1] < p) {
+        k = j;
+        p = d[j - 1];
       }
     }
 
-    if ( k != i )
-    {
-      d[k-1] = d[i-1];
-      d[i-1] = p;
-      p = z[i-1];
-      z[i-1] = z[k-1];
-      z[k-1] = p;
+    if (k != i) {
+      d[k - 1] = d[i - 1];
+      d[i - 1] = p;
+      p = z[i - 1];
+      z[i - 1] = z[k - 1];
+      z[k - 1] = p;
     }
   }
   return;
 }
-//****************************************************************************80
 
-void GaussHermiteQuadrature::parchk ( int kind, int m, double alpha, double beta )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -734,57 +652,49 @@ void GaussHermiteQuadrature::parchk ( int kind, int m, double alpha, double beta
 //    Input, double ALPHA, BETA, the parameters, if required
 //    by the value of KIND.
 //
-{
+void GaussHermiteQuadrature::parchk(int kind, int m, double alpha,
+  double beta) {
   double tmp;
 
-  if ( kind <= 0 )
-  {
-    cout << "\n";
-    cout << "PARCHK - Fatal error!\n";
-    cout << "  KIND <= 0.\n";
-    exit ( 1 );
+  if (kind <= 0) {
+    printf("\n");
+    printf("PARCHK - Fatal error!\n");
+    printf("  KIND <= 0.\n");
+    exit(1);
   }
-//
-//  Check ALPHA for Gegenbauer, Jacobi, Laguerre, Hermite, Exponential.
-//
-  if ( 3 <= kind && alpha <= -1.0 )
-  {
-    cout << "\n";
-    cout << "PARCHK - Fatal error!\n";
-    cout << "  3 <= KIND and ALPHA <= -1.\n";
-    exit ( 1 );
+  //
+  //  Check ALPHA for Gegenbauer, Jacobi, Laguerre, Hermite, Exponential.
+  //
+  if (3 <= kind && alpha <= -1.0) {
+    printf("\n");
+    printf("PARCHK - Fatal error!\n");
+    printf("  3 <= KIND and ALPHA <= -1.\n");
+    exit(1);
   }
-//
-//  Check BETA for Jacobi.
-//
-  if ( kind == 4 && beta <= -1.0 )
-  {
-    cout << "\n";
-    cout << "PARCHK - Fatal error!\n";
-    cout << "  KIND == 4 and BETA <= -1.0.\n";
-    exit ( 1 );
+  //
+  //  Check BETA for Jacobi.
+  //
+  if (kind == 4 && beta <= -1.0) {
+    printf("\n");
+    printf("PARCHK - Fatal error!\n");
+    printf("  KIND == 4 and BETA <= -1.0.\n");
+    exit(1);
   }
-//
-//  Check ALPHA and BETA for rational.
-//
-  if ( kind == 8 )
-  {
+  //
+  //  Check ALPHA and BETA for rational.
+  //
+  if (kind == 8) {
     tmp = alpha + beta + m + 1.0;
-    if ( 0.0 <= tmp || tmp <= beta )
-    {
-      cout << "\n";
-      cout << "PARCHK - Fatal error!\n";
-      cout << "  KIND == 8 but condition on ALPHA and BETA fails.\n";
-      exit ( 1 );
+    if (0.0 <= tmp || tmp <= beta) {
+      printf("\n");
+      printf("PARCHK - Fatal error!\n");
+      printf("  KIND == 8 but condition on ALPHA and BETA fails.\n");
+      exit(1);
     }
   }
   return;
 }
-//****************************************************************************80
 
-double GaussHermiteQuadrature::r8_abs ( double x )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -808,24 +718,17 @@ double GaussHermiteQuadrature::r8_abs ( double x )
 //
 //    Output, double R8_ABS, the absolute value of X.
 //
-{
+double GaussHermiteQuadrature::r8_abs(double x) {
   double value;
 
-  if ( 0.0 <= x )
-  {
+  if (0.0 <= x) {
     value = x;
-  }
-  else
-  {
+  } else {
     value = -x;
   }
   return value;
 }
-//****************************************************************************80
 
-double GaussHermiteQuadrature::r8_epsilon ( )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -837,7 +740,7 @@ double GaussHermiteQuadrature::r8_epsilon ( )
 //    property that, to the precision of the computer's arithmetic,
 //      1 < 1 + R
 //    but
-//      1 = ( 1 + R / 2 )
+//      1 =(1 + R / 2)
 //
 //  Licensing:
 //
@@ -855,13 +758,12 @@ double GaussHermiteQuadrature::r8_epsilon ( )
 //
 //    Output, double R8_EPSILON, the R8 round-off unit.
 //
-{
+double GaussHermiteQuadrature::r8_epsilon() {
   double value;
 
   value = 1.0;
 
-  while ( 1.0 < ( double ) ( 1.0 + value )  )
-  {
+  while (1.0 < static_cast<double>(1.0 + value)) {
     value = value / 2.0;
   }
 
@@ -869,11 +771,7 @@ double GaussHermiteQuadrature::r8_epsilon ( )
 
   return value;
 }
-//****************************************************************************80
 
-double GaussHermiteQuadrature::r8_huge ( )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -902,18 +800,14 @@ double GaussHermiteQuadrature::r8_huge ( )
 //
 //    Output, double R8_HUGE, a "huge" R8 value.
 //
-{
+double GaussHermiteQuadrature::r8_huge() {
   double value;
 
   value = 1.0E+30;
 
   return value;
 }
-//****************************************************************************80
 
-double GaussHermiteQuadrature::r8_sign ( double x )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -937,26 +831,17 @@ double GaussHermiteQuadrature::r8_sign ( double x )
 //
 //    Output, double R8_SIGN, the sign of X.
 //
-{
+double GaussHermiteQuadrature::r8_sign(double x) {
   double value;
 
-  if ( x < 0.0 )
-  {
+  if (x < 0.0) {
     value = -1.0;
-  }
-  else
-  {
+  } else {
     value = 1.0;
   }
   return value;
 }
-//****************************************************************************80
 
-void GaussHermiteQuadrature::scqf ( int nt, double t[], int mlt[], double wts[], int nwts, int ndx[],
-  double swts[], double st[], int kind, double alpha, double beta, double a,
-  double b )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -1025,7 +910,9 @@ void GaussHermiteQuadrature::scqf ( int nt, double t[], int mlt[], double wts[],
 //
 //    Input, double A, B, the interval endpoints.
 //
-{
+void GaussHermiteQuadrature::scqf(int nt, double t[], int mlt[], double wts[],
+    int nwts, int ndx[], double swts[], double st[], int kind, double alpha,
+    double beta, double a, double b) {
   double al;
   double be;
   int i;
@@ -1037,150 +924,121 @@ void GaussHermiteQuadrature::scqf ( int nt, double t[], int mlt[], double wts[],
   double temp;
   double tmp;
 
-  temp = r8_epsilon ( );
+  temp = r8_epsilon();
 
-  parchk ( kind, 1, alpha, beta );
+  parchk(kind, 1, alpha, beta);
 
-  if ( kind == 1 )
-  {
+  if (kind == 1) {
     al = 0.0;
     be = 0.0;
-    if ( r8_abs ( b - a ) <= temp )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  |B - A| too small.\n";
-      exit ( 1 );
+    if (r8_abs(b - a) <= temp) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  |B - A| too small.\n");
+      exit(1);
     }
-    shft = ( a + b ) / 2.0;
-    slp = ( b - a ) / 2.0;
-  }
-  else if ( kind == 2 )
-  {
+    shft = (a + b) / 2.0;
+    slp = (b - a) / 2.0;
+  } else if (kind == 2) {
     al = -0.5;
     be = -0.5;
-    if ( r8_abs ( b - a ) <= temp )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  |B - A| too small.\n";
-      exit ( 1 );
+    if (r8_abs(b - a) <= temp) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  |B - A| too small.\n");
+      exit(1);
     }
-    shft = ( a + b ) / 2.0;
-    slp = ( b - a ) / 2.0;
-  }
-  else if ( kind == 3 )
-  {
+    shft = (a + b) / 2.0;
+    slp = (b - a) / 2.0;
+  } else if (kind == 3) {
     al = alpha;
     be = alpha;
-    if ( r8_abs ( b - a ) <= temp )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  |B - A| too small.\n";
-      exit ( 1 );
+    if (r8_abs(b - a) <= temp) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  |B - A| too small.\n");
+      exit(1);
     }
-    shft = ( a + b ) / 2.0;
-    slp = ( b - a ) / 2.0;
-  }
-  else if ( kind == 4 )
-  {
+    shft = (a + b) / 2.0;
+    slp = (b - a) / 2.0;
+  } else if (kind == 4) {
     al = alpha;
     be = beta;
 
-    if ( r8_abs ( b - a ) <= temp )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  |B - A| too small.\n";
-      exit ( 1 );
+    if (r8_abs(b - a) <= temp) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  |B - A| too small.\n");
+      exit(1);
     }
-    shft = ( a + b ) / 2.0;
-    slp = ( b - a ) / 2.0;
-  }
-  else if ( kind == 5 )
-  {
-    if ( b <= 0.0 )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  B <= 0\n";
-      exit ( 1 );
+    shft = (a + b) / 2.0;
+    slp = (b - a) / 2.0;
+  } else if (kind == 5) {
+    if (b <= 0.0) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  B <= 0\n");
+      exit(1);
     }
     shft = a;
     slp = 1.0 / b;
     al = alpha;
     be = 0.0;
-  }
-  else if ( kind == 6 )
-  {
-    if ( b <= 0.0 )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  B <= 0.\n";
-      exit ( 1 );
+  } else if (kind == 6) {
+    if (b <= 0.0) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  B <= 0.\n");
+      exit(1);
     }
     shft = a;
-    slp = 1.0 / sqrt ( b );
+    slp = 1.0 / sqrt(b);
     al = alpha;
     be = 0.0;
-  }
-  else if ( kind == 7 )
-  {
+  } else if (kind == 7) {
     al = alpha;
     be = 0.0;
-    if ( r8_abs ( b - a ) <= temp )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  |B - A| too small.\n";
-      exit ( 1 );
+    if (r8_abs(b - a) <= temp) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  |B - A| too small.\n");
+      exit(1);
     }
-    shft = ( a + b ) / 2.0;
-    slp = ( b - a ) / 2.0;
-  }
-  else if ( kind == 8 )
-  {
-    if ( a + b <= 0.0 )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  A + B <= 0.\n";
-      exit ( 1 );
+    shft = (a + b) / 2.0;
+    slp = (b - a) / 2.0;
+  } else if (kind == 8) {
+    if (a + b <= 0.0) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  A + B <= 0.\n");
+      exit(1);
     }
     shft = a;
     slp = a + b;
     al = alpha;
     be = beta;
-  }
-  else if ( kind == 9 )
-  {
+  } else if (kind == 9) {
     al = 0.5;
     be = 0.5;
-    if ( r8_abs ( b - a ) <= temp )
-    {
-      cout << "\n";
-      cout << "SCQF - Fatal error!\n";
-      cout << "  |B - A| too small.\n";
-      exit ( 1 );
+    if (r8_abs(b - a) <= temp) {
+      printf("\n");
+      printf("SCQF - Fatal error!\n");
+      printf("  |B - A| too small.\n");
+      exit(1);
     }
-    shft = ( a + b ) / 2.0;
-    slp = ( b - a ) / 2.0;
+    shft = (a + b) / 2.0;
+    slp = (b - a) / 2.0;
   }
 
-  p = pow ( slp, al + be + 1.0 );
+  p = pow(slp, al + be + 1.0);
 
-  for ( k = 0; k < nt; k++ )
-  {
+  for (k = 0; k < nt; k++) {
     st[k] = shft + slp * t[k];
-    l = abs ( ndx[k] );
+    l = abs(ndx[k]);
 
-    if ( l != 0 )
-    {
+    if (l != 0) {
       tmp = p;
-      for ( i = l - 1; i <= l - 1 + mlt[k] - 1; i++ )
-      {
+      for (i = l - 1; i <= l - 1 + mlt[k] - 1; i++) {
         swts[i] = wts[i] * tmp;
         tmp = tmp * slp;
       }
@@ -1188,12 +1046,7 @@ void GaussHermiteQuadrature::scqf ( int nt, double t[], int mlt[], double wts[],
   }
   return;
 }
-//****************************************************************************80
 
-void GaussHermiteQuadrature::sgqf ( int nt, double aj[], double bj[], double zemu, double t[],
-  double wts[] )
-
-//****************************************************************************80
 //
 //  Purpose:
 //
@@ -1241,88 +1094,37 @@ void GaussHermiteQuadrature::sgqf ( int nt, double aj[], double bj[], double zem
 //
 //    Output, double WTS[NT], the weights.
 //
-{
+void GaussHermiteQuadrature::sgqf(int nt, double aj[], double bj[],
+    double zemu, double t[], double wts[]) {
   int i;
-//
-//  Exit if the zero-th moment is not positive.
-//
-  if ( zemu <= 0.0 )
-  {
-    cout << "\n";
-    cout << "SGQF - Fatal error!\n";
-    cout << "  ZEMU <= 0.\n";
-    exit ( 1 );
+  //
+  //  Exit if the zero-th moment is not positive.
+  //
+  if (zemu <= 0.0) {
+    printf("\n");
+    printf("SGQF - Fatal error!\n");
+    printf("  ZEMU <= 0.\n");
+    exit(1);
   }
-//
-//  Set up vectors for IMTQLX.
-//
-  for ( i = 0; i < nt; i++ )
-  {
+  //
+  //  Set up vectors for IMTQLX.
+  //
+  for (i = 0; i < nt; i++) {
     t[i] = aj[i];
   }
-  wts[0] = sqrt ( zemu );
-  for ( i = 1; i < nt; i++ )
-  {
+  wts[0] = sqrt(zemu);
+  for (i = 1; i < nt; i++) {
     wts[i] = 0.0;
   }
-//
-//  Diagonalize the Jacobi matrix.
-//
-  imtqlx ( nt, t, bj, wts );
+  //
+  //  Diagonalize the Jacobi matrix.
+  //
+  imtqlx(nt, t, bj, wts);
 
-  for ( i = 0; i < nt; i++ )
-  {
+  for (i = 0; i < nt; i++) {
     wts[i] = wts[i] * wts[i];
   }
 
   return;
-}
-//****************************************************************************80
-
-void GaussHermiteQuadrature::timestamp ( )
-
-//****************************************************************************80
-//
-//  Purpose:
-//
-//    TIMESTAMP prints the current YMDHMS date as a time stamp.
-//
-//  Example:
-//
-//    31 May 2001 09:45:54 AM
-//
-//  Licensing:
-//
-//    This code is distributed under the GNU LGPL license.
-//
-//  Modified:
-//
-//    08 July 2009
-//
-//  Author:
-//
-//    John Burkardt
-//
-//  Parameters:
-//
-//    None
-//
-{
-# define TIME_SIZE 40
-
-  static char time_buffer[TIME_SIZE];
-  const struct std::tm *tm_ptr;
-  size_t len;
-  std::time_t now;
-
-  now = std::time ( NULL );
-  tm_ptr = std::localtime ( &now );
-
-  len = std::strftime ( time_buffer, TIME_SIZE, "%d %B %Y %I:%M:%S %p", tm_ptr );
-
-  std::cout << time_buffer << "\n";
-
-  return;
-# undef TIME_SIZE
 }
 }

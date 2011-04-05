@@ -106,7 +106,6 @@ void Matrix::SetColumn(size_t col, Vector *vec) {
   gsl_matrix_set_col(m, col, vec->v);
 }
 
-//  TODO(jrm): fix for general purpose sphering
 void Matrix::Sphere() {
   LOG(DEBUG, "= Calling sphere with no params =\n");
   Sphere(this);
@@ -188,13 +187,14 @@ void Matrix::Print() {  // TODO(jrm): turn into ToString
 }
 
 char * Matrix::ToString() {
-  char *ret = (char*) malloc(256 * sizeof(char));  // TODO(jrm): this should get freed
+  // TODO(jrm): this should get freed
+  char *ret = reinterpret_cast<char*>(malloc(256 * sizeof(*ret)));
   ret[0] = NULL;
   for (size_t row = 0; row < this->Height(); ++row) {
     for (size_t col = 0; col < this->Width(); ++col) {
-      snprintf(ret, 256 * sizeof(char), "%s%.2f\t", ret, this->Get(row, col));
+      snprintf(ret, 256 * sizeof(*ret), "%s%.2f\t", ret, this->Get(row, col));
     }
-    snprintf(ret, 256 * sizeof(char), "%s\n", ret);
+    snprintf(ret, 256 * sizeof(*ret), "%s\n", ret);
   }
   return ret;
 }

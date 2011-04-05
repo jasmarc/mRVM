@@ -32,7 +32,6 @@ class GaussHermiteQuadrature {
         double a, double b);
     void sgqf(int nt, double aj[], double bj[], double zemu, double t[],
         double wts[]);
-    void timestamp();
 };
 }
 

@@ -29,8 +29,6 @@ void Kernel::Init() {
       double s1 = this->KernelElementFunction(vec1, vec1);
       double s2 = this->KernelElementFunction(vec2, vec2);
       elem = elem / sqrt(s1 * s2);
-      //  TODO(jrm): add proper debugging statement
-      //printf("row = %zu, col = %zu, s1 = %f, s2 = %f, sqrt = %f, elem = %f\n", row, col, s1, s2, sqrt(s1 * s2), elem);
       this->Set(row, col, elem);
       delete vec2;
       delete vec1;
