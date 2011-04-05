@@ -15,9 +15,6 @@
 #define PACKAGE "mRVM"
 #define VERSION "0.0.1"
 
-#define PACKAGE    "mRVM"
-#define VERSION    "0.0.1"
-
 using jason::Matrix;
 using jason::Vector;
 using jason::Trainer;
