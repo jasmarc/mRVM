@@ -112,8 +112,8 @@ size_t Vector::GetNumberOfClasses() {
   size_t max = 0;
   LOG(DEBUG, "Size = %zu\n", this->Size());
   for (double i = 0; i < this->Size(); ++i) {
-    if(this->Get(i) > max)
-      max = (int) this->Get(i);
+    if (this->Get(i) > max)
+      max = static_cast<int>(this->Get(i));
   }
   LOG(DEBUG, "Number of classes = %zu\n", max);
   return max + 1;

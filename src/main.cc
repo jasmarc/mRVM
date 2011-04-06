@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   int opt;
   int long_opt_index = 0;
   int longval;
-  
+
   char *train_filename;
   char *labels_filename;
   char *test_filename;
