@@ -1,0 +1,1 @@
+find -E ./src -regex ".*\.(cc|h)" -exec ./tools/cpplint.py {} \;

@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "lib/Matrix.h"
+#include "lib/Vector.h"
 #include "lib/Kernel.h"
 #include "lib/Trainer.h"
 #include "lib/Predictor.h"
@@ -26,15 +27,23 @@ using jason::LINEAR;
 using jason::POLYNOMIAL;
 using jason::GAUSSIAN;
 
+extern int verbosity;
+
 void print_help(int exval);
-void run();
-void handleKernelOption(KernelType & kernel);
+void run(char *train_filename, char *labels_filename, char *test_filename);
+void handleFile(char **filename);
+void handleVerbosity();
+void handleKernelOption(KernelType *kernel);
 
 int main(int argc, char **argv) {
   int opt;
   int long_opt_index = 0;
-  KernelType kernel = LINEAR;
   int longval;
+  
+  char *train_filename;
+  char *labels_filename;
+  char *test_filename;
+  KernelType kernel = LINEAR;
 
   // no arguments given
   if (argc == 1) {
@@ -44,12 +53,15 @@ int main(int argc, char **argv) {
   struct option long_options[] = {
       { "help",     0, NULL,      'h' },
       { "version",  0, NULL,      'V' },
-      { "verbose",  0, NULL,      'v' },
+      { "verbose",  1, &longval,  'v' },
+      { "train",    1, &longval,  'r' },
+      { "labels",   1, &longval,  'l' },
+      { "test",     1, &longval,  't' },
       { "kernel",   1, &longval,  'k' },
       { 0,          0, 0,         0  }
   };
 
-  while ((opt = getopt_long(argc, argv, "hVvf:k:", long_options,
+  while ((opt = getopt_long(argc, argv, "hVv:r:l:t:k:", long_options,
     &long_opt_index)) != -1) {
     switch (opt) {
     case 'h':
@@ -60,14 +72,24 @@ int main(int argc, char **argv) {
       exit(0);
       break;
     case 'v':
-      printf("%s: Verbose option is set `%c'\n", PACKAGE, optopt);
+      handleVerbosity();
+      printf("%s: Verbose option is set to `%s'\n", PACKAGE, optarg);
+      break;
+    case 'r':
+      handleFile(&train_filename);
+      printf("%s: Train Filename  %s\n", PACKAGE, optarg);
+      break;
+    case 'l':
+      handleFile(&labels_filename);
+      printf("%s: Labels Filename %s\n", PACKAGE, optarg);
+      break;
+    case 't':
+      handleFile(&test_filename);
+      printf("%s: Test Filename   %s\n", PACKAGE, optarg);
       break;
     case 'k':
+      handleKernelOption(&kernel);
       printf("%s: Kernel %s\n", PACKAGE, optarg);
-      handleKernelOption(kernel);
-    break;
-    case 'f':
-      printf("%s: Filename %s\n", PACKAGE, optarg);
       break;
     case ':':
       fprintf(stderr, "%s: Error - Option `%c' needs a value\n\n", PACKAGE,
@@ -79,9 +101,25 @@ int main(int argc, char **argv) {
       print_help(1);
     case 0:
       switch (longval) {
+      case 'v':
+        handleVerbosity();
+        printf("%s: Verbose option is set to `%s'\n", PACKAGE, optarg);
+        break;
+      case 'r':
+        handleFile(&train_filename);
+        printf("%s: Train Filename  %s\n", PACKAGE, optarg);
+        break;
+      case 'l':
+        handleFile(&labels_filename);
+        printf("%s: Labels Filename %s\n", PACKAGE, optarg);
+        break;
+      case 't':
+        handleFile(&test_filename);
+        printf("%s: Test Filename   %s\n", PACKAGE, optarg);
+        break;
       case 'k':
+        handleKernelOption(&kernel);
         printf("%s: Kernel %s\n", PACKAGE, optarg);
-        handleKernelOption(kernel);
         break;
       }
     }
@@ -91,18 +129,26 @@ int main(int argc, char **argv) {
   for (; optind < argc; optind++)
     printf("argument: %s\n", argv[optind]);
 
-  run();
+  run(train_filename, labels_filename, test_filename);
 
   return 0;
 }
 
-void handleKernelOption(KernelType &kernel) {
+void handleFile(char **filename) {
+  *filename = optarg;
+}
+
+void handleVerbosity() {
+  verbosity = atoi(optarg);
+}
+
+void handleKernelOption(KernelType *kernel) {
   if (strcmp(optarg, "LINEAR") == 0) {
-    kernel = LINEAR;
+    *kernel = LINEAR;
   } else if (strcmp(optarg, "POLYNOMIAL") == 0) {
-    kernel = POLYNOMIAL;
+    *kernel = POLYNOMIAL;
   } else if (strcmp(optarg, "GAUSSIAN") == 0) {
-    kernel = GAUSSIAN;
+    *kernel = GAUSSIAN;
   }
 }
 
@@ -111,12 +157,21 @@ void print_help(int exval) {
     PACKAGE, VERSION);
   printf("%s [-h] [-V] [-f FILE] [-o FILE]\n\n", PACKAGE);
 
-  printf("  -h, --help      print this help and exit\n");
-  printf("  -V, --version   print version and exit\n\n");
+  printf("  -h, --help         print this help and exit\n");
+  printf("  -V, --version      print version and exit\n\n");
 
-  printf("  -v, --verbose   set verbose flag\n");
-  printf("  -k, --kernel    specify the kernel: LINEAR, POLYNOMIAL, GAUSSIAN\n");
-  printf("  -f FILE         set input file\n");
+  printf("  -r, --train  FILE  set input file\n");
+  printf("  -l, --labels FILE  set input file\n");
+  printf("  -t, --test   FILE  set input file\n");
+  printf("  -k, --kernel       specify the kernel:\n");
+  printf("                       LINEAR\n");
+  printf("                       POLYNOMIAL\n");
+  printf("                       GAUSSIAN\n");
+  printf("  -v, --verbose      set verbosity level:\n");
+  printf("                       0 = No output\n");
+  printf("                       1 = Normal (default)\n");
+  printf("                       2 = Verbose\n");
+  printf("                       3 = Debug\n");
 
   printf("Based upon work by Psorakis, Damoulas, Girolami.\n");
   printf("Implementation by Marcell, jasonmarcell@gmail.com\n\n");
@@ -124,36 +179,16 @@ void print_help(int exval) {
   exit(exval);
 }
 
-void run() {
-  // The number of classes
-  const size_t CLASSES = 2;
-
-  // Training points
-  double train_arr[] =  \
-      {1, 0.9,
-    0.8, 0.9,
-    0.5, 0.6,
-    0.1, 0.2,
-    0.2, 0.3};
-  Matrix *train = new Matrix(train_arr, 5, 2);
-
-  // Labels
-  double labels_arr[] = {0, 0, 0, 1, 1};
-  Vector *labels = new Vector(labels_arr, 5);
-
-  // Testing Points
-  double test_arr[] =
-      {1, 0.9,
-    0.8, 0.9,
-    0.1, 0.2,
-    0.2, 0.3,
-    0.7, 0.7};
-  Matrix *test = new Matrix(test_arr, 5, 2);
+void run(char *train_filename, char *labels_filename, char *test_filename) {
+  Matrix *train  = new Matrix(train_filename);
+  Vector *labels = new Vector(labels_filename);
+  Matrix *test   = new Matrix(test_filename);
+  size_t classes = labels->GetNumberOfClasses();
 
   LOG(VERBOSE, "=== Starting... ===\n");
 
   // Pass in training points, labels, and number of classes
-  Trainer *trainer = new Trainer(train, labels, CLASSES);
+  Trainer *trainer = new Trainer(train, labels, classes);
   trainer->Process();
 
   // Pass in the w matrix, the training points, and the testing points

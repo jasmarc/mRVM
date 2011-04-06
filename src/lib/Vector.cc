@@ -1,6 +1,7 @@
 // Copyright 2011 Jason Marcell
 
 #include "lib/Vector.h"
+#include "lib/Log.h"
 
 namespace jason {
 
@@ -12,6 +13,21 @@ Vector::Vector(double *data, size_t size) {
   this->v = gsl_vector_alloc(size);
   for (size_t i = 0; i < size; ++i) {
     gsl_vector_set(this->v, i, data[i]);
+  }
+}
+
+Vector::Vector(const char* filename) {
+  size_t rows;
+  FILE *f;
+  f = fopen(filename, "r");
+  if (f) {
+    rows = NumberOfElements(f);
+    this->v = gsl_vector_alloc(rows);
+    gsl_vector_fscanf(f, this->v);
+    fclose(f);
+  } else {
+    perror("Error");
+    throw("File read error.");
   }
 }
 
@@ -92,7 +108,32 @@ Vector *Vector::Add(Vector *other) {
   return ret;
 }
 
+size_t Vector::GetNumberOfClasses() {
+  size_t max = 0;
+  LOG(DEBUG, "Size = %zu\n", this->Size());
+  for (double i = 0; i < this->Size(); ++i) {
+    if(this->Get(i) > max)
+      max = (int) this->Get(i);
+  }
+  LOG(DEBUG, "Number of classes = %zu\n", max);
+  return max + 1;
+}
+
 Vector::Vector(gsl_vector *v) {
   this->v = v;
+}
+
+size_t Vector::NumberOfElements(FILE *f) {  // TODO(jrm): move to another class
+  char lastChar = '\n';
+  char currentChar = NULL;
+  size_t count = 0;
+  while ((currentChar = fgetc(f)) != EOF) {
+    if (lastChar == '\n' && currentChar != '\n') {
+      ++count;
+    }
+    lastChar = currentChar;
+  }
+  fseek(f, 0, SEEK_SET);
+  return count;
 }
 }

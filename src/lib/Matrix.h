@@ -48,8 +48,8 @@ class Matrix {
     friend class Kernel;
   private:
     explicit Matrix(gsl_matrix *mat);
-    int NumberOfRows(FILE *f);
-    int NumberOfColumns(FILE *f);
+    size_t NumberOfRows(FILE *f);
+    size_t NumberOfColumns(FILE *f);
     gsl_matrix *CloneGSLMatrix();
     gsl_matrix* m;
     Vector *means;

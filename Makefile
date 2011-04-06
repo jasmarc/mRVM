@@ -43,4 +43,5 @@ $(EXEC):
 		$(SRC_DIR)/lib/GaussianKernel.cc \
 		$(SRC_DIR)/lib/RandomNumberGenerator.cc \
 		$(SRC_DIR)/lib/GaussHermiteQuadrature.cc \
+		$(SRC_DIR)/lib/Log.cc \
 		$(SRC_DIR)/main.cc

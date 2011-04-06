@@ -3,7 +3,7 @@
 #ifndef SRC_LIB_VECTOR_H_
 #define SRC_LIB_VECTOR_H_
 
-#include <gsl_matrix.h>
+#include <gsl/gsl_matrix.h>
 
 #include "lib/Matrix.h"
 
@@ -15,6 +15,7 @@ class Vector {
   public:
     explicit Vector(size_t size);
     explicit Vector(double *data, size_t size);
+    explicit Vector(const char* filename);
     virtual ~Vector();
     size_t Size();
     double Get(size_t elem);
@@ -25,10 +26,12 @@ class Vector {
     Vector *Multiply(Matrix *m);
     Vector *Subtract(Vector *other);
     Vector *Add(Vector *other);
+    size_t GetNumberOfClasses();
     void Print();
     friend class Matrix;
   private:
     explicit Vector(gsl_vector *v);
+    size_t NumberOfElements(FILE *f);
     gsl_vector *v;
 };
 }

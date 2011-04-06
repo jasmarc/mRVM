@@ -38,7 +38,7 @@ Matrix::Matrix(double *data, size_t height, size_t width) {
   }
 }
 
-Matrix::Matrix(const char* filename) {
+Matrix::Matrix(const char* filename) {  // TODO(jrm): move to another class
   int rows, cols;
   FILE *f;
   f = fopen(filename, "r");
@@ -139,7 +139,7 @@ void Matrix::Sphere(Matrix *other) {
 }
 
 void Matrix::NormalizeResults() {
-  LOG(DEBUG, "= Start normalize results. =");
+  LOG(DEBUG, "= Start normalize results. =\n");
   for (size_t row = 0; row < this->Height(); ++row) {
     float sum = 0;
     for (size_t col = 0; col < this->Width(); ++col) {
@@ -150,7 +150,7 @@ void Matrix::NormalizeResults() {
       this->Set(row, col, val / sum);
     }
   }
-  LOG(DEBUG, "= End normalize results. =");
+  LOG(DEBUG, "= End normalize results. =\n");
 }
 
 void Matrix::CacheMeansAndStdevs() {
@@ -247,10 +247,10 @@ Vector* Matrix::Multiply(Vector *vec) {
   // TODO(jrm) warning! newing up
 }
 
-int Matrix::NumberOfRows(FILE *f) {
+size_t Matrix::NumberOfRows(FILE *f) {  // TODO(jrm): move to another class
   char lastChar = '\n';
   char currentChar = NULL;
-  int count = 0;
+  size_t count = 0;
   while ((currentChar = fgetc(f)) != EOF) {
     if (lastChar == '\n' && currentChar != '\n') {
       ++count;
@@ -261,10 +261,10 @@ int Matrix::NumberOfRows(FILE *f) {
   return count;
 }
 
-int Matrix::NumberOfColumns(FILE *f) {
+size_t Matrix::NumberOfColumns(FILE *f) {  // TODO(jrm): move to another class
   char lastChar = ' ';
   char currentChar = NULL;
-  int count = 0;
+  size_t count = 0;
   while ((currentChar = fgetc(f)) != '\n') {
     if (isspace(lastChar) && !isspace(currentChar)) {
       ++count;
