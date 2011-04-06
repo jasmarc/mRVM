@@ -73,23 +73,18 @@ int main(int argc, char **argv) {
       break;
     case 'v':
       handleVerbosity();
-      printf("%s: Verbose option is set to `%s'\n", PACKAGE, optarg);
       break;
     case 'r':
       handleFile(&train_filename);
-      printf("%s: Train Filename  %s\n", PACKAGE, optarg);
       break;
     case 'l':
       handleFile(&labels_filename);
-      printf("%s: Labels Filename %s\n", PACKAGE, optarg);
       break;
     case 't':
       handleFile(&test_filename);
-      printf("%s: Test Filename   %s\n", PACKAGE, optarg);
       break;
     case 'k':
       handleKernelOption(&kernel);
-      printf("%s: Kernel %s\n", PACKAGE, optarg);
       break;
     case ':':
       fprintf(stderr, "%s: Error - Option `%c' needs a value\n\n", PACKAGE,
@@ -103,23 +98,18 @@ int main(int argc, char **argv) {
       switch (longval) {
       case 'v':
         handleVerbosity();
-        printf("%s: Verbose option is set to `%s'\n", PACKAGE, optarg);
         break;
       case 'r':
         handleFile(&train_filename);
-        printf("%s: Train Filename  %s\n", PACKAGE, optarg);
         break;
       case 'l':
         handleFile(&labels_filename);
-        printf("%s: Labels Filename %s\n", PACKAGE, optarg);
         break;
       case 't':
         handleFile(&test_filename);
-        printf("%s: Test Filename   %s\n", PACKAGE, optarg);
         break;
       case 'k':
         handleKernelOption(&kernel);
-        printf("%s: Kernel %s\n", PACKAGE, optarg);
         break;
       }
     }
@@ -128,6 +118,26 @@ int main(int argc, char **argv) {
   // print all remaining options
   for (; optind < argc; optind++)
     printf("argument: %s\n", argv[optind]);
+
+  const char *str_kernel = NULL;
+  switch (kernel) {
+  case LINEAR:
+    str_kernel = "LINEAR";
+    break;
+  case POLYNOMIAL:
+    str_kernel = "POLYNOMIAL";
+    break;
+  case GAUSSIAN:
+    str_kernel = "GAUSSIAN";
+    break;
+  default:
+    str_kernel = "UNKNOWN";
+  }
+  LOG(VERBOSE, "Verbosity level = %d\n", verbosity)
+  LOG(VERBOSE, "Kernel          = %s\n", str_kernel);
+  LOG(VERBOSE, "Training file   = %s\n", train_filename);
+  LOG(VERBOSE, "Labels file     = %s\n", labels_filename);
+  LOG(VERBOSE, "Test file       = %s\n", test_filename);
 
   run(train_filename, labels_filename, test_filename);
 
