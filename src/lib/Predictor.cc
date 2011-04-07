@@ -52,11 +52,14 @@ Matrix* Predictor::QuadratureApproximation() {
           if (j != i) {
             Vector *wj = w->Column(j);
             double wjkn = wj->Multiply(kn);
+            delete wj;
             prod *= r->GaussianCDF(points[k] + wikn - wjkn);
           }  // if
         }  // for j
         sum += weights[k]*prod;
       }  // for k
+      delete wi;
+      delete kn;
       LOG(DEBUG, "sample n=%zu, class i=%zu, value=%f\n", n, i, sum);
       result->Set(n, i, sum);
     }  // for i

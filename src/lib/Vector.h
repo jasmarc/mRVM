@@ -27,11 +27,12 @@ class Vector {
     Vector *Subtract(Vector *other);
     Vector *Add(Vector *other);
     size_t GetNumberOfClasses();
-    void Print();
+    char * ToString();
     friend class Matrix;
   private:
     size_t NumberOfElements(FILE *f);
     gsl_vector *v;
+    char *to_str;
 };
 }
 

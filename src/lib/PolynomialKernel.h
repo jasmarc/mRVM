@@ -15,7 +15,6 @@ class Kernel;
 
 class PolynomialKernel: public jason::Kernel {
   public:
-    explicit PolynomialKernel(int n);
     PolynomialKernel(Matrix *m1, Matrix *m2, int n);
     virtual ~PolynomialKernel();
     double KernelElementFunction(Vector *vec1, Vector *vec2);

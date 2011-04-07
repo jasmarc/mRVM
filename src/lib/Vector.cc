@@ -6,10 +6,12 @@
 namespace jason {
 
 Vector::Vector(size_t size) {
+  to_str = reinterpret_cast<char*> (malloc(256 * sizeof(*to_str)));
   this->v = gsl_vector_alloc(size);
 }
 
 Vector::Vector(double *data, size_t size) {
+  to_str = reinterpret_cast<char*> (malloc(256 * sizeof(*to_str)));
   this->v = gsl_vector_alloc(size);
   for (size_t i = 0; i < size; ++i) {
     gsl_vector_set(this->v, i, data[i]);
@@ -17,6 +19,7 @@ Vector::Vector(double *data, size_t size) {
 }
 
 Vector::Vector(const char* filename) {
+  to_str = reinterpret_cast<char*> (malloc(256 * sizeof(*to_str)));
   size_t rows;
   FILE *f;
   f = fopen(filename, "r");
@@ -31,14 +34,17 @@ Vector::Vector(const char* filename) {
   }
 }
 
-void Vector::Print() {
+char * Vector::ToString() {
+  to_str[0] = NULL;
   for (size_t j = 0; j < v->size; j++) {
-    printf("%.2f ", gsl_vector_get(v, j));
+    snprintf(to_str, 256 * sizeof(*to_str), "%s%.3f\t", to_str, gsl_vector_get(v, j));
   }
-  printf("\n");
+  snprintf(to_str, 256 * sizeof(*to_str), "%s\n", to_str);
+  return to_str;
 }
 
 Vector::~Vector() {
+  free(to_str);
   gsl_vector_free(this->v);
 }
 

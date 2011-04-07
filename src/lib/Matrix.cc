@@ -9,19 +9,18 @@
 
 namespace jason {
 
-Matrix::Matrix() {
-  // TODO(jrm) danger, the m variable isn't getting set
-}
-
 Matrix::Matrix(size_t height, size_t width) {
+  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
   this->m = gsl_matrix_alloc(height, width);
 }
 
 Matrix::Matrix(gsl_matrix *mat) {
+  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
   this->m = mat;
 }
 
 Matrix::Matrix(Vector *vec) {
+  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
   gsl_matrix *mat = gsl_matrix_alloc(vec->v->size, vec->v->size);
   gsl_vector_view diag = gsl_matrix_diagonal(mat);
   gsl_matrix_set_all(mat, 0.0);
@@ -30,6 +29,7 @@ Matrix::Matrix(Vector *vec) {
 }
 
 Matrix::Matrix(double *data, size_t height, size_t width) {
+  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
   this->m = gsl_matrix_alloc(height, width);
   for (size_t row = 0; row < height; ++row) {
     for (size_t col = 0; col < width; ++col) {
@@ -39,6 +39,7 @@ Matrix::Matrix(double *data, size_t height, size_t width) {
 }
 
 Matrix::Matrix(const char* filename) {  // TODO(jrm): move to another class
+  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
   int rows, cols;
   FILE *f;
   f = fopen(filename, "r");
@@ -55,11 +56,8 @@ Matrix::Matrix(const char* filename) {  // TODO(jrm): move to another class
 }
 
 Matrix::~Matrix() {
+  free(to_str);
   gsl_matrix_free(this->m);
-}
-
-Matrix *Matrix::Clone() {  // TODO(jrm) change to copy constructor
-  return new Matrix(this->m->data, this->Width(), this->Height());
 }
 
 void Matrix::Invert() {
@@ -89,13 +87,13 @@ void Matrix::Add(Matrix *other) {
 Vector* Matrix::Row(size_t row) {
   gsl_vector *v = gsl_vector_alloc(this->Width());
   gsl_matrix_get_row(v, m, row);
-  return new Vector(v->data, v->size);  // TODO(jrm) warning! newing up
+  return new Vector(v->data, v->size);
 }
 
 Vector* Matrix::Column(size_t col) {
   gsl_vector *v = gsl_vector_alloc(this->Height());
   gsl_matrix_get_col(v, m, col);
-  return new Vector(v->data, v->size);  // TODO(jrm) warning! newing up
+  return new Vector(v->data, v->size);
 }
 
 void Matrix::SetRow(size_t row, Vector *vec) {
@@ -177,26 +175,15 @@ Vector* Matrix::GetStdevs() {
   return stdevs;
 }
 
-void Matrix::Print() {  // TODO(jrm): turn into ToString
-  for (size_t row = 0; row < this->Height(); ++row) {
-    for (size_t col = 0; col < this->Width(); ++col) {
-      printf("%.2f\t", this->Get(row, col));
-    }
-    printf("\n");
-  }
-}
-
 char * Matrix::ToString() {
-  // TODO(jrm): this should get freed
-  char *ret = reinterpret_cast<char*>(malloc(256 * sizeof(*ret)));
-  ret[0] = NULL;
+  to_str[0] = NULL;
   for (size_t row = 0; row < this->Height(); ++row) {
     for (size_t col = 0; col < this->Width(); ++col) {
-      snprintf(ret, 256 * sizeof(*ret), "%s%.3f\t", ret, this->Get(row, col));
+      snprintf(to_str, 256 * sizeof(*to_str), "%s%.3f\t", to_str, this->Get(row, col));
     }
-    snprintf(ret, 256 * sizeof(*ret), "%s\n", ret);
+    snprintf(to_str, 256 * sizeof(*to_str), "%s\n", to_str);
   }
-  return ret;
+  return to_str;
 }
 
 size_t Matrix::Height() {
@@ -273,17 +260,5 @@ size_t Matrix::NumberOfColumns(FILE *f) {  // TODO(jrm): move to another class
   }
   fseek(f, 0, SEEK_SET);
   return count;
-}
-
-gsl_matrix *Matrix::CloneGSLMatrix() {
-  size_t height = this->Height();
-  size_t width = this->Width();
-  gsl_matrix *ret = gsl_matrix_alloc(height, width);
-  for (size_t row = 0; row < height; ++row) {
-    for (size_t col = 0; col < width; ++col) {
-      gsl_matrix_set(ret, row, col, *(this->m->data + row * width + col));
-    }
-  }
-  return ret;
 }
 }

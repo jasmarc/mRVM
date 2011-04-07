@@ -7,12 +7,6 @@
 
 namespace jason {
 
-GaussianKernel::GaussianKernel(Vector *theta) {
-  LOG(DEBUG, "Gaussian Kernel constructor with one param.\n");
-  // TODO(jrm) danger, the m variable isn't getting set
-  this->theta = new Matrix(theta);
-}
-
 GaussianKernel::GaussianKernel(Matrix *m1, Matrix *m2, int param)
   : Kernel(m1, m2) {
   LOG(DEBUG, "Gaussian Kernel constructor with params.\n");
@@ -21,6 +15,7 @@ GaussianKernel::GaussianKernel(Matrix *m1, Matrix *m2, int param)
     theta->Set(i, static_cast<double>(param));
   }
   this->theta = new Matrix(theta);
+  delete theta;
 }
 
 GaussianKernel::~GaussianKernel() {

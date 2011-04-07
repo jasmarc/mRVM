@@ -8,11 +8,6 @@
 
 namespace jason {
 
-Kernel::Kernel() {
-  // TODO(jrm) danger, the m variable isn't getting set
-  LOG(DEBUG, "Base Kernel constructor with no params.\n");
-}
-
 Kernel::Kernel(Matrix *m1, Matrix *m2) : Matrix(m1->Height(), m2->Height()) {
   LOG(DEBUG, "Base Kernel constructor with params.\n");
   this->m1 = m1;

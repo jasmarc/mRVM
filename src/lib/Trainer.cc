@@ -149,6 +149,7 @@ void Trainer::UpdateY() {
         y->Set(n, c, val);
       }  // if
     }  // for c
+    delete k_n;
   }  // for n
   delete r;
 }

@@ -17,15 +17,12 @@ class Vector;
 
 class Matrix {
   public:
-    explicit Matrix();
     explicit Matrix(size_t height, size_t width);
     explicit Matrix(Vector *vec);
-    explicit Matrix(double *data, size_t height, size_t width);
     explicit Matrix(const char* filename);
     virtual ~Matrix();
     size_t Height();
     size_t Width();
-    Matrix *Clone();
     void Invert();
     double Get(int row, int col);
     void Set(int row, int col, double val);
@@ -40,7 +37,6 @@ class Matrix {
     void CacheMeansAndStdevs();
     Vector* GetMeans();
     Vector* GetStdevs();
-    void Print();
     char *ToString();
     Matrix* Multiply(Matrix *other);
     Vector* Multiply(Vector *vec);
@@ -48,12 +44,13 @@ class Matrix {
     friend class Kernel;
   private:
     explicit Matrix(gsl_matrix *mat);
+    explicit Matrix(double *data, size_t height, size_t width);
     size_t NumberOfRows(FILE *f);
     size_t NumberOfColumns(FILE *f);
-    gsl_matrix *CloneGSLMatrix();
     gsl_matrix* m;
     Vector *means;
     Vector *stdevs;
+    char *to_str;
 };
 }
 

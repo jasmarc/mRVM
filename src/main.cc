@@ -158,7 +158,7 @@ void handleKernelOption(KernelType *kernel, char **kernel_str) {
 void print_help(int exval) {
   printf("%s, %s multi-class multi-kernel Relevance Vector Machines (mRVM)\n",
     PACKAGE, VERSION);
-  printf("%s [options]\n\n", PACKAGE);  // TODO(jrm) fix this.
+  printf("%s [options]\n\n", PACKAGE);
 
   printf("  -h, --help         print this help and exit\n");
   printf("  -V, --version      print version and exit\n\n");
@@ -265,6 +265,7 @@ void PerformEvaluation(Matrix *predictions, Vector *answers) {
       LOG(VERBOSE, "\tINCORRECT\n");
     }
   }
-  LOG(NORMAL, "Percent correct: %.3f\n", (double) total_correct / predictions->Height());
+  LOG(NORMAL, "Percent correct: %.3f\n",
+      static_cast<double>(total_correct) / predictions->Height());
 }
 }

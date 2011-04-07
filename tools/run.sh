@@ -1,10 +1,10 @@
 #!/bin/bash
 VERBOSITY=${1-1}
 
-valgrind --leak-check=yes \
---track-origins=yes \
+# valgrind --leak-check=yes \
+# --track-origins=yes \
 ./bin/mRVM \
-  -k POLYNOMIAL \
+  -k GAUSSIAN \
   -v $VERBOSITY \
   --train   ./data/train.dat \
   --labels  ./data/labels.dat \
