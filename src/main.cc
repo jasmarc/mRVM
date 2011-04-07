@@ -238,7 +238,13 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
   if (answers_filename != NULL) {
     Vector *answers = new Vector(answers_filename);
     PerformEvaluation(predictions, answers);
+    delete answers;
   }
+  delete predictions;
+  delete predictor;
+  delete trainer;
+  delete train_kernel;
+  delete test_kernel;
 
   LOG(VERBOSE, "=== End. ===\n");
 }

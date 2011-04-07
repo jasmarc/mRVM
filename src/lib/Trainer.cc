@@ -20,6 +20,9 @@ Trainer::Trainer(Matrix *matrix, Vector *labels, size_t classes,
 }
 
 Trainer::~Trainer() {
+  delete y;
+  delete a;
+  delete w;
 }
 
 void Trainer::Process() {
@@ -80,17 +83,18 @@ void Trainer::UpdateA(double tau, double v) {
 }
 
 void Trainer::UpdateW() {
-  Matrix *w_temp;
   for (size_t col = 0; col < classes; ++col) {
     Vector *A_c = a->Column(col);
     Matrix *A = new Matrix(A_c);
     Vector *Y_c = y->Column(col);
-    w_temp = k->Multiply(k);
-    w_temp->Add(A);
-    w_temp->Invert();
-    w_temp = w_temp->Multiply(k);
-    Vector *W_c = w_temp->Multiply(Y_c);
+    Matrix *w_temp1 = k->Multiply(k);
+    w_temp1->Add(A);
+    w_temp1->Invert();
+    Matrix *w_temp2 = w_temp1->Multiply(k);
+    Vector *W_c = w_temp2->Multiply(Y_c);
     w->SetColumn(col, W_c);
+    delete w_temp2;
+    delete w_temp1;
     delete W_c;
     delete Y_c;
     delete A;

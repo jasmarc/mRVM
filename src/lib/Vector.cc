@@ -65,7 +65,7 @@ Matrix *Vector::RepmatVert(size_t k) {
   for (size_t i = 0; i < k; ++i) {
     gsl_matrix_set_col(mat, i, v);
   }
-  return new Matrix(mat);  // TODO(jrm) warning! newing up
+  return new Matrix(mat);
 }
 
 Matrix *Vector::RepmatHoriz(size_t k) {
@@ -73,7 +73,7 @@ Matrix *Vector::RepmatHoriz(size_t k) {
   for (size_t i = 0; i < k; ++i) {
     gsl_matrix_set_row(mat, i, v);
   }
-  return new Matrix(mat);  // TODO(jrm) warning! newing up
+  return new Matrix(mat);
 }
 
 double Vector::Multiply(Vector *other) {

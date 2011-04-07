@@ -211,7 +211,6 @@ Matrix* Matrix::Multiply(Matrix *other) {
       result->data,           // double * C
       result->size2);         // const int ldc
   return new Matrix(result->data, this->Height(), other->Height());
-  // TODO(jrm) warning! newing up
 }
 
 Vector* Matrix::Multiply(Vector *vec) {
@@ -231,7 +230,6 @@ Vector* Matrix::Multiply(Vector *vec) {
       result->data,           // double * C
       1);                     // const int ldc
   return new Vector(result->data, result->size);
-  // TODO(jrm) warning! newing up
 }
 
 size_t Matrix::NumberOfRows(FILE *f) {  // TODO(jrm): move to another class

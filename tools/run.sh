@@ -1,8 +1,11 @@
 #!/bin/bash
 VERBOSITY=${1-1}
 
-# valgrind --leak-check=yes \
-# --track-origins=yes \
+# valgrind \
+#   --track-origins=yes \
+#   --leak-check=full \
+#   --show-reachable=yes \
+#   --suppressions=./tools/darwin9.supp \
 ./bin/mRVM \
   -k GAUSSIAN \
   -v $VERBOSITY \
