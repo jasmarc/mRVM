@@ -30,7 +30,6 @@ class Vector {
     void Print();
     friend class Matrix;
   private:
-    explicit Vector(gsl_vector *v);
     size_t NumberOfElements(FILE *f);
     gsl_vector *v;
 };

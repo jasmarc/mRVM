@@ -97,13 +97,13 @@ Vector *Vector::Multiply(Matrix *m) {
 }
 
 Vector *Vector::Subtract(Vector *other) {
-  Vector *ret = new Vector(v);  // TODO(jrm) warning! newing up
+  Vector *ret = new Vector(v->data, v->size);  // TODO(jrm) warning! newing up
   gsl_vector_sub(ret->v, other->v);
   return ret;
 }
 
 Vector *Vector::Add(Vector *other) {
-  Vector *ret = new Vector(v);  // TODO(jrm) warning! newing up
+  Vector *ret = new Vector(v->data, v->size);  // TODO(jrm) warning! newing up
   gsl_vector_add(ret->v, other->v);
   return ret;
 }
@@ -117,10 +117,6 @@ size_t Vector::GetNumberOfClasses() {
   }
   LOG(DEBUG, "Number of classes = %zu\n", max);
   return max + 1;
-}
-
-Vector::Vector(gsl_vector *v) {
-  this->v = v;
 }
 
 size_t Vector::NumberOfElements(FILE *f) {  // TODO(jrm): move to another class

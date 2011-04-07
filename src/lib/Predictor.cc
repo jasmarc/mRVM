@@ -9,44 +9,27 @@
 
 namespace jason {
 
-Predictor::Predictor(Matrix *w, Matrix *x_train, Matrix *x_predict) {
-  LOG(DEBUG, "== Beginning Predictor Constructor. ==\n\n");
-
-  LOG(VERBOSE, "= printing x_predict before sphere: =\n");
-  LOG(VERBOSE, "%s", x_predict->ToString());
-  LOG(VERBOSE, "= end x_predict before sphere. =\n\n");
-
-  x_predict->Sphere(x_train);
-
-  LOG(DEBUG, "= printing x_predict after sphere: =\n");
-  LOG(DEBUG, "%s", x_predict->ToString());
-  LOG(DEBUG, "= end x_predict after sphere. =\n\n");
-
-  this->k = new LinearKernel(x_train, x_predict);
-  k->Init();
-
-  LOG(VERBOSE, "= printing k: =\n");
-  LOG(VERBOSE, "%s", k->ToString());
-  LOG(VERBOSE, "= end k. =\n\n");
-
+Predictor::Predictor(Matrix *w, Matrix *x_train, Matrix *x_predict,
+    Kernel *kernel) {
+  this->k = kernel;
   this->w = w;
-
-  LOG(DEBUG, "= printing w: =\n");
-  LOG(DEBUG, "%s", w->ToString());
-  LOG(DEBUG, "= end w. =\n\n");
-
-  LOG(DEBUG, "== End Predictor Constructor. ==\n\n");
 }
 
 Predictor::~Predictor() {
 }
 
 void Predictor::Predict() {
+  LOG(VERBOSE, "= Initializing Predictor Kernel. =\n");
+
+  k->Init();
+
+  LOG(VERBOSE, "= Printing Predictor Kernel: =\n");
+  LOG(VERBOSE, "%s\n", k->ToString());
+
   Matrix *predictions = QuadratureApproximation();
   predictions->NormalizeResults();
-  LOG(NORMAL, "= predictions: =\n");
-  LOG(NORMAL, "%s", predictions->ToString());
-  LOG(NORMAL, "= end predictions. =\n\n");
+  LOG(NORMAL, "= Predictions: =\n");
+  LOG(NORMAL, "%s\n", predictions->ToString());
 }
 
 Matrix* Predictor::QuadratureApproximation() {

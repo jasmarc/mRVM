@@ -13,7 +13,7 @@ class Kernel;
 
 class Predictor {
   public:
-    Predictor(Matrix *w, Matrix *x_train, Matrix* x_predict);
+    Predictor(Matrix *w, Matrix *x_train, Matrix* x_predict, Kernel *kernel);
     virtual ~Predictor();
     void Predict();
   private:

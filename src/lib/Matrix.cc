@@ -89,13 +89,13 @@ void Matrix::Add(Matrix *other) {
 Vector* Matrix::Row(size_t row) {
   gsl_vector *v = gsl_vector_alloc(this->Width());
   gsl_matrix_get_row(v, m, row);
-  return new Vector(v);  // TODO(jrm) warning! newing up
+  return new Vector(v->data, v->size);  // TODO(jrm) warning! newing up
 }
 
 Vector* Matrix::Column(size_t col) {
   gsl_vector *v = gsl_vector_alloc(this->Height());
   gsl_matrix_get_col(v, m, col);
-  return new Vector(v);  // TODO(jrm) warning! newing up
+  return new Vector(v->data, v->size);  // TODO(jrm) warning! newing up
 }
 
 void Matrix::SetRow(size_t row, Vector *vec) {
@@ -192,7 +192,7 @@ char * Matrix::ToString() {
   ret[0] = NULL;
   for (size_t row = 0; row < this->Height(); ++row) {
     for (size_t col = 0; col < this->Width(); ++col) {
-      snprintf(ret, 256 * sizeof(*ret), "%s%.2f\t", ret, this->Get(row, col));
+      snprintf(ret, 256 * sizeof(*ret), "%s%.3f\t", ret, this->Get(row, col));
     }
     snprintf(ret, 256 * sizeof(*ret), "%s\n", ret);
   }

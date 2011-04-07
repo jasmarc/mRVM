@@ -3,16 +3,23 @@
 #include <math.h>
 
 #include "lib/GaussianKernel.h"
+#include "lib/Log.h"
 
 namespace jason {
 
 GaussianKernel::GaussianKernel(Vector *theta) {
+  LOG(DEBUG, "Gaussian Kernel constructor with one param.\n");
   // TODO(jrm) danger, the m variable isn't getting set
   this->theta = new Matrix(theta);
 }
 
-GaussianKernel::GaussianKernel(Matrix *m1, Matrix *m2, Vector *theta)
+GaussianKernel::GaussianKernel(Matrix *m1, Matrix *m2, int param)
   : Kernel(m1, m2) {
+  LOG(DEBUG, "Gaussian Kernel constructor with params.\n");
+  Vector *theta = new Vector(m1->Width());
+  for (size_t i = 0; i < theta->Size(); ++i) {
+    theta->Set(i, static_cast<double>(param));
+  }
   this->theta = new Matrix(theta);
 }
 
@@ -20,7 +27,7 @@ GaussianKernel::~GaussianKernel() {
 }
 
 double GaussianKernel::KernelElementFunction(Vector *vec1, Vector *vec2) {
-  double ret;
+  double ret = 1;
   Vector *v1 = vec1->Subtract(vec2);
   Vector *v2 = v1->Multiply(theta);
   ret = v2->Multiply(v1);

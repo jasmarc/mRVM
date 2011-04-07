@@ -13,7 +13,8 @@ class Kernel;
 
 class Trainer {
   public:
-    explicit Trainer(Matrix *matrix, Vector *labels, size_t classes);
+    explicit Trainer(Matrix *matrix, Vector *labels, size_t classes,
+        Kernel *kernel);
     virtual ~Trainer();
     void Process();
     Matrix *GetW();
@@ -28,7 +29,6 @@ class Trainer {
     Matrix *a;
     Matrix *y;
 
-    Kernel *BuildKernel(Matrix *m);
     void InitializeYAW();
     void UpdateA(double tau, double v);
     void UpdateW();

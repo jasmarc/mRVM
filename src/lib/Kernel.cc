@@ -4,14 +4,17 @@
 
 #include "lib/Kernel.h"
 #include "lib/Matrix.h"
+#include "lib/Log.h"
 
 namespace jason {
 
 Kernel::Kernel() {
   // TODO(jrm) danger, the m variable isn't getting set
+  LOG(DEBUG, "Base Kernel constructor with no params.\n");
 }
 
 Kernel::Kernel(Matrix *m1, Matrix *m2) : Matrix(m1->Height(), m2->Height()) {
+  LOG(DEBUG, "Base Kernel constructor with params.\n");
   this->m1 = m1;
   this->m2 = m2;
 }
@@ -20,6 +23,7 @@ Kernel::~Kernel() {
 }
 
 void Kernel::Init() {
+  LOG(DEBUG, "= Begin Base Kernel Init. =\n");
   this->m = gsl_matrix_alloc(m1->Height(), m2->Height());
   for (size_t row = 0; row < this->Height(); ++row) {
     for (size_t col = 0; col < this->Width(); ++col) {
@@ -34,9 +38,6 @@ void Kernel::Init() {
       delete vec1;
     }
   }
-}
-
-double Kernel::KernelElementFunction(Vector *vec1, Vector *vec2) {
-  return 0.0;
+  LOG(DEBUG, "= End Base Kernel Init. =\n");
 }
 }

@@ -1,5 +1,7 @@
 // Copyright 2011 Jason Marcell
 
+#include <math.h>
+
 #include "lib/RandomNumberGenerator.h"
 #include "lib/Trainer.h"
 #include "lib/LinearKernel.h"
@@ -7,12 +9,14 @@
 
 namespace jason {
 
-Trainer::Trainer(Matrix *matrix, Vector *labels, size_t classes) {
+Trainer::Trainer(Matrix *matrix, Vector *labels, size_t classes,
+    Kernel *kernel) {
   this->x = matrix;
   this->t = labels;
   this->samples = matrix->Height();
   this->features = matrix->Width();
   this->classes = classes;
+  this->k = kernel;
 }
 
 Trainer::~Trainer() {
@@ -20,45 +24,28 @@ Trainer::~Trainer() {
 
 void Trainer::Process() {
   LOG(DEBUG, "== Beginning Trainer. ==\n\n");
+  LOG(DEBUG, "= Initializing Train Kernel. =\n")
 
-  LOG(VERBOSE, "= printing x_train before sphere: =\n");
-  LOG(VERBOSE, "%s", x->ToString());
-  LOG(VERBOSE, "= end x_train before sphere. =\n\n");
-
-  x->CacheMeansAndStdevs();
-  x->Sphere();
-
-  LOG(DEBUG, "= printing x after sphere: =\n");
-  LOG(DEBUG, "%s", x->ToString());
-  LOG(DEBUG, "= end x after sphere. =\n\n");
-
-  k = BuildKernel(x);
   k->Init();
 
-  LOG(DEBUG, "= printing kernel: =\n");
-  LOG(DEBUG, "%s", k->ToString());
-  LOG(DEBUG, "= end kernel. =\n\n");
+  LOG(DEBUG, "= Printing Train Kernel: =\n");
+  LOG(DEBUG, "%s\n", k->ToString());
 
   InitializeYAW();
   for (int i = 0; i < 20; ++i) {
     UpdateW();
-    UpdateA(1.0, 1.0);
+    UpdateA(0.001, 0.001);
     UpdateY();
   }
 
-  LOG(DEBUG, "= printing w: =\n");
-  LOG(DEBUG, "%s", w->ToString());
-  LOG(DEBUG, "= end w. =\n\n");
+  LOG(DEBUG, "= Printing w: =\n");
+  LOG(DEBUG, "%s\n", w->ToString());
 
   LOG(DEBUG, "== End Trainer. ==\n");
 }
 
 Matrix *Trainer::GetW() {
   return this->w;
-}
-
-Kernel *Trainer::BuildKernel(Matrix *m) {
-  return new LinearKernel(m, m);
 }
 
 void Trainer::InitializeYAW() {
@@ -74,7 +61,7 @@ void Trainer::InitializeYAW() {
       else
         y_val = r->SampleUniform(0, 1);
       a_val = 1;
-      w_val = r->SampleGaussian(1/a_val);
+      w_val = r->SampleGaussian(sqrt(1/a_val));
       y->Set(row, col, y_val);
       a->Set(row, col, a_val);
       w->Set(row, col, w_val);

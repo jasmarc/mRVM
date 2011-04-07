@@ -8,6 +8,9 @@
 #include "lib/Matrix.h"
 #include "lib/Vector.h"
 #include "lib/Kernel.h"
+#include "lib/LinearKernel.h"
+#include "lib/PolynomialKernel.h"
+#include "lib/GaussianKernel.h"
 #include "lib/Trainer.h"
 #include "lib/Predictor.h"
 #include "lib/GaussHermiteQuadrature.h"
@@ -20,6 +23,9 @@ using jason::Matrix;
 using jason::Vector;
 using jason::Trainer;
 using jason::Kernel;
+using jason::LinearKernel;
+using jason::PolynomialKernel;
+using jason::GaussianKernel;
 using jason::Predictor;
 using jason::GaussHermiteQuadrature;
 using jason::KernelType;
@@ -30,7 +36,8 @@ using jason::GAUSSIAN;
 extern int verbosity;
 
 void print_help(int exval);
-void run(char *train_filename, char *labels_filename, char *test_filename);
+void run(char *train_filename, char *labels_filename, char *test_filename,
+    KernelType kernel_type, int kernel_param);
 void handleFile(char **filename);
 void handleVerbosity();
 void handleKernelOption(KernelType *kernel);
@@ -44,6 +51,7 @@ int main(int argc, char **argv) {
   char *labels_filename;
   char *test_filename;
   KernelType kernel = LINEAR;
+  int kernel_param;
 
   // no arguments given
   if (argc == 1) {
@@ -58,10 +66,11 @@ int main(int argc, char **argv) {
       { "labels",   1, &longval,  'l' },
       { "test",     1, &longval,  't' },
       { "kernel",   1, &longval,  'k' },
+      { "poly",     1, &longval,  'p' },
       { 0,          0, 0,         0  }
   };
 
-  while ((opt = getopt_long(argc, argv, "hVv:r:l:t:k:", long_options,
+  while ((opt = getopt_long(argc, argv, "hVv:r:l:t:k:p:", long_options,
     &long_opt_index)) != -1) {
     switch (opt) {
     case 'h':
@@ -86,6 +95,9 @@ int main(int argc, char **argv) {
     case 'k':
       handleKernelOption(&kernel);
       break;
+    case 'p':
+      kernel_param = atoi(optarg);
+      break;
     case ':':
       fprintf(stderr, "%s: Error - Option `%c' needs a value\n\n", PACKAGE,
         optopt);
@@ -94,7 +106,7 @@ int main(int argc, char **argv) {
     case '?':
       fprintf(stderr, "%s: Error - No such option: `%c'\n\n", PACKAGE, optopt);
       print_help(1);
-    case 0:
+    case 0:  // TODO(jrm): combine these two switch statements
       switch (longval) {
       case 'v':
         handleVerbosity();
@@ -110,6 +122,9 @@ int main(int argc, char **argv) {
         break;
       case 'k':
         handleKernelOption(&kernel);
+        break;
+      case 'p':
+        kernel_param = atoi(optarg);
         break;
       }
     }
@@ -131,24 +146,26 @@ int main(int argc, char **argv) {
     str_kernel = "GAUSSIAN";
     break;
   default:
-    str_kernel = "UNKNOWN";
+    fprintf(stderr, "%s: Error - Unknown Kernel Specified.\n\n", PACKAGE);
+    print_help(1);
   }
   LOG(VERBOSE, "Verbosity level = %d\n", verbosity)
   LOG(VERBOSE, "Kernel          = %s\n", str_kernel);
   LOG(VERBOSE, "Training file   = %s\n", train_filename);
   LOG(VERBOSE, "Labels file     = %s\n", labels_filename);
   LOG(VERBOSE, "Test file       = %s\n", test_filename);
+  LOG(VERBOSE, "Kernel param    = %d\n", kernel_param);
 
-  run(train_filename, labels_filename, test_filename);
+  run(train_filename, labels_filename, test_filename, kernel, kernel_param);
 
   return 0;
 }
 
-void handleFile(char **filename) {
+void handleFile(char **filename) {  // TODO(jrm) get rid of this
   *filename = optarg;
 }
 
-void handleVerbosity() {
+void handleVerbosity() {  // TODO(jrm) get rid of this
   verbosity = atoi(optarg);
 }
 
@@ -159,13 +176,16 @@ void handleKernelOption(KernelType *kernel) {
     *kernel = POLYNOMIAL;
   } else if (strcmp(optarg, "GAUSSIAN") == 0) {
     *kernel = GAUSSIAN;
+  } else {
+    fprintf(stderr, "%s: Error - Unknown Kernel Specified.\n\n", PACKAGE);
+    print_help(1);
   }
 }
 
 void print_help(int exval) {
   printf("%s, %s multi-class multi-kernel Relevance Vector Machines (mRVM)\n",
     PACKAGE, VERSION);
-  printf("%s [-h] [-V] [-f FILE] [-o FILE]\n\n", PACKAGE);
+  printf("%s [-h] [-V] [-f FILE] [-o FILE]\n\n", PACKAGE);  // TODO(jrm) fix this.
 
   printf("  -h, --help         print this help and exit\n");
   printf("  -V, --version      print version and exit\n\n");
@@ -182,6 +202,8 @@ void print_help(int exval) {
   printf("                       1 = Normal (default)\n");
   printf("                       2 = Verbose\n");
   printf("                       3 = Debug\n");
+  printf("  -p, --param n      set param for poly or gauss\n");
+  printf("                     kernel to n.\n\n");
 
   printf("Based upon work by Psorakis, Damoulas, Girolami.\n");
   printf("Implementation by Marcell, jasonmarcell@gmail.com\n\n");
@@ -189,7 +211,8 @@ void print_help(int exval) {
   exit(exval);
 }
 
-void run(char *train_filename, char *labels_filename, char *test_filename) {
+void run(char *train_filename, char *labels_filename, char *test_filename,
+    KernelType kernel_type, int kernel_param) {
   Matrix *train  = new Matrix(train_filename);
   Vector *labels = new Vector(labels_filename);
   Matrix *test   = new Matrix(test_filename);
@@ -197,12 +220,39 @@ void run(char *train_filename, char *labels_filename, char *test_filename) {
 
   LOG(VERBOSE, "=== Starting... ===\n");
 
+  train->CacheMeansAndStdevs();
+  train->Sphere();
+  test->Sphere(train);
+
+  Kernel *train_kernel;
+  Kernel *test_kernel;
+  switch (kernel_type) {
+  case LINEAR:
+    LOG(DEBUG, "Creating Linear Kernels.\n");
+    train_kernel = new LinearKernel(train, train);
+    test_kernel = new LinearKernel(train, test);
+    break;
+  case POLYNOMIAL:
+    LOG(DEBUG, "Creating Polynomial Kernels.\n");
+    train_kernel = new PolynomialKernel(train, train, kernel_param);
+    test_kernel = new PolynomialKernel(train, test, kernel_param);
+    break;
+  case GAUSSIAN:
+    LOG(DEBUG, "Creating Gaussian Kernels.\n");
+    train_kernel = new GaussianKernel(train, train, kernel_param);
+    test_kernel = new GaussianKernel(train, test, kernel_param);
+    break;
+  default:
+    fprintf(stderr, "%s: Error - No such kernel.\n", PACKAGE);
+    print_help(1);
+  }
+
   // Pass in training points, labels, and number of classes
-  Trainer *trainer = new Trainer(train, labels, classes);
+  Trainer *trainer = new Trainer(train, labels, classes, train_kernel);
   trainer->Process();
 
   // Pass in the w matrix, the training points, and the testing points
-  Predictor *predictor = new Predictor(trainer->GetW(), train, test);
+  Predictor *predictor = new Predictor(trainer->GetW(), train, test, test_kernel);
   predictor->Predict();
 
   LOG(VERBOSE, "=== End. ===\n");
