@@ -15,7 +15,7 @@ class Predictor {
   public:
     Predictor(Matrix *w, Matrix *x_train, Matrix* x_predict, Kernel *kernel);
     virtual ~Predictor();
-    void Predict();
+    Matrix* Predict();
   private:
     Matrix *QuadratureApproximation();
     Kernel *k;

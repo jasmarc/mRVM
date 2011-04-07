@@ -18,7 +18,7 @@ Predictor::Predictor(Matrix *w, Matrix *x_train, Matrix *x_predict,
 Predictor::~Predictor() {
 }
 
-void Predictor::Predict() {
+Matrix* Predictor::Predict() {
   LOG(VERBOSE, "= Initializing Predictor Kernel. =\n");
 
   k->Init();
@@ -28,8 +28,7 @@ void Predictor::Predict() {
 
   Matrix *predictions = QuadratureApproximation();
   predictions->NormalizeResults();
-  LOG(NORMAL, "= Predictions: =\n");
-  LOG(NORMAL, "%s\n", predictions->ToString());
+  return predictions;
 }
 
 Matrix* Predictor::QuadratureApproximation() {
