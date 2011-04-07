@@ -15,32 +15,13 @@
 #include "lib/Predictor.h"
 #include "lib/GaussHermiteQuadrature.h"
 #include "lib/Log.h"
+#include "./main.h"
 
-#define PACKAGE "mRVM"
-#define VERSION "0.0.1"
+int main(int argc, char **argv) {
+  jason::main(argc, argv);
+}
 
-using jason::Matrix;
-using jason::Vector;
-using jason::Trainer;
-using jason::Kernel;
-using jason::LinearKernel;
-using jason::PolynomialKernel;
-using jason::GaussianKernel;
-using jason::Predictor;
-using jason::GaussHermiteQuadrature;
-using jason::KernelType;
-using jason::LINEAR;
-using jason::POLYNOMIAL;
-using jason::GAUSSIAN;
-
-extern int verbosity;
-
-void print_help(int exval);
-void run(char *train_filename, char *labels_filename, char *test_filename,
-    KernelType kernel_type, int kernel_param, double tau, double upsilon);
-void handleFile(char **filename);
-void handleVerbosity();
-void handleKernelOption(KernelType *kernel);
+namespace jason {
 
 int main(int argc, char **argv) {
   int opt;
@@ -51,6 +32,7 @@ int main(int argc, char **argv) {
   char *labels_filename;
   char *test_filename;
   KernelType kernel = LINEAR;
+  char *str_kernel;
   int kernel_param;
   double tau;
   double upsilon;
@@ -85,19 +67,20 @@ int main(int argc, char **argv) {
       exit(0);
       break;
     case 'v':
-      handleVerbosity();
+      verbosity = atoi(optarg);
       break;
     case 'r':
-      handleFile(&train_filename);
+      train_filename = optarg;
       break;
     case 'l':
-      handleFile(&labels_filename);
+      labels_filename = optarg;
       break;
     case 't':
-      handleFile(&test_filename);
+      test_filename = optarg;
+      break;
       break;
     case 'k':
-      handleKernelOption(&kernel);
+      handleKernelOption(&kernel, &str_kernel);
       break;
     case 'p':
       kernel_param = atoi(optarg);
@@ -119,19 +102,19 @@ int main(int argc, char **argv) {
     case 0:  // TODO(jrm): combine these two switch statements
       switch (longval) {
       case 'v':
-        handleVerbosity();
+        verbosity = atoi(optarg);
         break;
       case 'r':
-        handleFile(&train_filename);
+        train_filename = optarg;
         break;
       case 'l':
-        handleFile(&labels_filename);
+        labels_filename = optarg;
         break;
       case 't':
-        handleFile(&test_filename);
+        test_filename = optarg;
         break;
       case 'k':
-        handleKernelOption(&kernel);
+        handleKernelOption(&kernel, &str_kernel);
         break;
       case 'p':
         kernel_param = atoi(optarg);
@@ -150,21 +133,6 @@ int main(int argc, char **argv) {
   for (; optind < argc; optind++)
     printf("argument: %s\n", argv[optind]);
 
-  const char *str_kernel = NULL;
-  switch (kernel) {
-  case LINEAR:
-    str_kernel = "LINEAR";
-    break;
-  case POLYNOMIAL:
-    str_kernel = "POLYNOMIAL";
-    break;
-  case GAUSSIAN:
-    str_kernel = "GAUSSIAN";
-    break;
-  default:
-    fprintf(stderr, "%s: Error - Unknown Kernel Specified.\n\n", PACKAGE);
-    print_help(1);
-  }
   LOG(VERBOSE, "Verbosity level = %d\n", verbosity)
   LOG(VERBOSE, "Kernel          = %s\n", str_kernel);
   LOG(VERBOSE, "Training file   = %s\n", train_filename);
@@ -180,15 +148,8 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void handleFile(char **filename) {  // TODO(jrm) get rid of this
-  *filename = optarg;
-}
-
-void handleVerbosity() {  // TODO(jrm) get rid of this
-  verbosity = atoi(optarg);
-}
-
-void handleKernelOption(KernelType *kernel) {
+void handleKernelOption(KernelType *kernel, char **kernel_str) {
+  *kernel_str = optarg;
   if (strcmp(optarg, "LINEAR") == 0) {
     *kernel = LINEAR;
   } else if (strcmp(optarg, "POLYNOMIAL") == 0) {
@@ -222,7 +183,9 @@ void print_help(int exval) {
   printf("                       2 = Verbose\n");
   printf("                       3 = Debug\n");
   printf("  -p, --param n      set param for poly or gauss\n");
-  printf("                     kernel to n.\n\n");
+  printf("                     kernel to n.\n");
+  printf("  -T, --tau n        set tau parameter\n");
+  printf("  -u, --upsilon n    set upsilon parameter\n\n");
 
   printf("Based upon work by Psorakis, Damoulas, Girolami.\n");
   printf("Implementation by Marcell, jasonmarcell@gmail.com\n\n");
@@ -275,4 +238,5 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
   predictor->Predict();
 
   LOG(VERBOSE, "=== End. ===\n");
+}
 }
