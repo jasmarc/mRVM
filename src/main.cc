@@ -37,7 +37,7 @@ extern int verbosity;
 
 void print_help(int exval);
 void run(char *train_filename, char *labels_filename, char *test_filename,
-    KernelType kernel_type, int kernel_param);
+    KernelType kernel_type, int kernel_param, double tau, double upsilon);
 void handleFile(char **filename);
 void handleVerbosity();
 void handleKernelOption(KernelType *kernel);
@@ -52,6 +52,8 @@ int main(int argc, char **argv) {
   char *test_filename;
   KernelType kernel = LINEAR;
   int kernel_param;
+  double tau;
+  double upsilon;
 
   // no arguments given
   if (argc == 1) {
@@ -66,11 +68,13 @@ int main(int argc, char **argv) {
       { "labels",   1, &longval,  'l' },
       { "test",     1, &longval,  't' },
       { "kernel",   1, &longval,  'k' },
-      { "poly",     1, &longval,  'p' },
+      { "param",    1, &longval,  'p' },
+      { "tau",      1, &longval,  'T' },
+      { "upsilon",  1, &longval,  'u' },
       { 0,          0, 0,         0  }
   };
 
-  while ((opt = getopt_long(argc, argv, "hVv:r:l:t:k:p:", long_options,
+  while ((opt = getopt_long(argc, argv, "hVv:r:l:t:k:p:T:u:", long_options,
     &long_opt_index)) != -1) {
     switch (opt) {
     case 'h':
@@ -97,6 +101,12 @@ int main(int argc, char **argv) {
       break;
     case 'p':
       kernel_param = atoi(optarg);
+      break;
+    case 'T':
+      tau = atof(optarg);
+      break;
+    case 'u':
+      upsilon = atof(optarg);
       break;
     case ':':
       fprintf(stderr, "%s: Error - Option `%c' needs a value\n\n", PACKAGE,
@@ -125,6 +135,12 @@ int main(int argc, char **argv) {
         break;
       case 'p':
         kernel_param = atoi(optarg);
+        break;
+      case 'T':
+        tau = atof(optarg);
+        break;
+      case 'u':
+        upsilon = atof(optarg);
         break;
       }
     }
@@ -155,8 +171,11 @@ int main(int argc, char **argv) {
   LOG(VERBOSE, "Labels file     = %s\n", labels_filename);
   LOG(VERBOSE, "Test file       = %s\n", test_filename);
   LOG(VERBOSE, "Kernel param    = %d\n", kernel_param);
+  LOG(VERBOSE, "Tau param       = %.3f\n", tau);
+  LOG(VERBOSE, "Upsilon param   = %.3f\n", upsilon);
 
-  run(train_filename, labels_filename, test_filename, kernel, kernel_param);
+  run(train_filename, labels_filename, test_filename, kernel,
+      kernel_param, tau, upsilon);
 
   return 0;
 }
@@ -212,7 +231,7 @@ void print_help(int exval) {
 }
 
 void run(char *train_filename, char *labels_filename, char *test_filename,
-    KernelType kernel_type, int kernel_param) {
+    KernelType kernel_type, int kernel_param, double tau, double upsilon) {
   Matrix *train  = new Matrix(train_filename);
   Vector *labels = new Vector(labels_filename);
   Matrix *test   = new Matrix(test_filename);
