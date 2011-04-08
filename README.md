@@ -4,3 +4,5 @@ The following codebase is part of my Masters Project for my M.Eng CS degree at [
 mRVM
 ----
 The goal of this code is to reproduce the mRVM1 and mRVM2 models as outlined in this [paper](http://www.cs.cornell.edu/~damoulas/Site/publications_files/TNN-2010-P-1894.R2.pdf). mRVM stand for multi-class multi-kernel Relevance Vector Machine and is a Bayesian learning and classification model originally introduced by M. Tipping (2001).
+
+small change
