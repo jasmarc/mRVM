@@ -15,11 +15,11 @@ Kernel::Kernel(Matrix *m1, Matrix *m2) : Matrix(m1->Height(), m2->Height()) {
 }
 
 Kernel::~Kernel() {
+  LOG(DEBUG, "Base Kernel Destructor.\n");
 }
 
 void Kernel::Init() {
   LOG(DEBUG, "= Begin Base Kernel Init. =\n");
-  this->m = gsl_matrix_alloc(m1->Height(), m2->Height());
   for (size_t row = 0; row < this->Height(); ++row) {
     for (size_t col = 0; col < this->Width(); ++col) {
       Vector* vec1 = m1->Row(row);

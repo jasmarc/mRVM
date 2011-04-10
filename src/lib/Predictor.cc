@@ -65,6 +65,8 @@ Matrix* Predictor::QuadratureApproximation() {
     }  // for i
   }  // for n
   delete r;
+  delete[] points;
+  delete[] weights;
   return result;
 }
 }

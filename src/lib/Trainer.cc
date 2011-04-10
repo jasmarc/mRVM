@@ -25,7 +25,7 @@ Trainer::~Trainer() {
   delete w;
 }
 
-void Trainer::Process() {
+void Trainer::Process(double tau, double upsilon) {
   LOG(DEBUG, "== Beginning Trainer. ==\n\n");
   LOG(DEBUG, "= Initializing Train Kernel. =\n")
 
@@ -37,7 +37,7 @@ void Trainer::Process() {
   InitializeYAW();
   for (int i = 0; i < 20; ++i) {
     UpdateW();
-    UpdateA(0.001, 0.001);
+    UpdateA(tau, upsilon);
     UpdateY();
   }
 
@@ -52,6 +52,7 @@ Matrix *Trainer::GetW() {
 }
 
 void Trainer::InitializeYAW() {
+  LOG(DEBUG, "= InitializeYAW. =\n");
   y = new Matrix(samples, classes);
   a = new Matrix(samples, classes);
   w = new Matrix(samples, classes);
@@ -73,16 +74,18 @@ void Trainer::InitializeYAW() {
   delete r;
 }
 
-void Trainer::UpdateA(double tau, double v) {
+void Trainer::UpdateA(double tau, double upsilon) {
+  LOG(DEBUG, "= UpdateA. =\n");
   for (size_t row = 0; row < samples; ++row) {
     for (size_t col = 0; col < classes; ++col) {
       double val = w->Get(row, col);
-      a->Set(row, col, (2*tau + 1)/(val*val + 2*v));
+      a->Set(row, col, (2*tau + 1)/(val*val + 2*upsilon));
     }
   }
 }
 
 void Trainer::UpdateW() {
+  LOG(DEBUG, "= UpdateW. =\n");
   for (size_t col = 0; col < classes; ++col) {
     Vector *A_c = a->Column(col);
     Matrix *A = new Matrix(A_c);
@@ -103,6 +106,7 @@ void Trainer::UpdateW() {
 }
 
 void Trainer::UpdateY() {
+  LOG(DEBUG, "= UpdateY. =\n");
   RandomNumberGenerator *r = new RandomNumberGenerator();
   for (size_t n = 0; n < samples; ++n) {
     size_t i = (size_t)t->Get(n);

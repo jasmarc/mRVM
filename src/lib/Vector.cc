@@ -10,6 +10,11 @@ Vector::Vector(size_t size) {
   this->v = gsl_vector_alloc(size);
 }
 
+Vector::Vector(gsl_vector *vec) {
+  to_str = reinterpret_cast<char*> (malloc(256 * sizeof(*to_str)));
+  this->v = vec;
+}
+
 Vector::Vector(double *data, size_t size) {
   to_str = reinterpret_cast<char*> (malloc(256 * sizeof(*to_str)));
   this->v = gsl_vector_alloc(size);
@@ -34,13 +39,14 @@ Vector::Vector(const char* filename) {
   }
 }
 
-char * Vector::ToString() {
-  to_str[0] = NULL;
+char* Vector::ToString() {
+  this->to_str[0] = NULL;
   for (size_t j = 0; j < v->size; j++) {
-    snprintf(to_str, 256 * sizeof(*to_str), "%s%.3f\t", to_str, gsl_vector_get(v, j));
+    snprintf(this->to_str, 256 * sizeof(*this->to_str), "%s%.3f\t",
+      this->to_str, gsl_vector_get(v, j));
   }
-  snprintf(to_str, 256 * sizeof(*to_str), "%s\n", to_str);
-  return to_str;
+  snprintf(this->to_str, 256 * sizeof(*this->to_str), "%s\n", this->to_str);
+  return this->to_str;
 }
 
 Vector::~Vector() {
@@ -62,6 +68,7 @@ void Vector::Set(size_t elem, double value) {
 
 Matrix *Vector::RepmatVert(size_t k) {
   gsl_matrix *mat = gsl_matrix_alloc(v->size, k);
+  LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
   for (size_t i = 0; i < k; ++i) {
     gsl_matrix_set_col(mat, i, v);
   }
@@ -70,6 +77,7 @@ Matrix *Vector::RepmatVert(size_t k) {
 
 Matrix *Vector::RepmatHoriz(size_t k) {
   gsl_matrix *mat = gsl_matrix_alloc(k, v->size);
+  LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
   for (size_t i = 0; i < k; ++i) {
     gsl_matrix_set_row(mat, i, v);
   }
@@ -98,7 +106,7 @@ Vector *Vector::Multiply(Matrix *m) {
       0.0f,                   // const double beta
       result->data,           // double * C
       result->size);          // const int ldc
-  return new Vector(result->data, m->Width());
+  return new Vector(result);
   // TODO(jrm) warning! newing up
 }
 

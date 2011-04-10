@@ -17,6 +17,7 @@ class Vector;
 
 class Matrix {
   public:
+    explicit Matrix(double *data, size_t height, size_t width);
     explicit Matrix(size_t height, size_t width);
     explicit Matrix(Vector *vec);
     explicit Matrix(const char* filename);
@@ -43,8 +44,8 @@ class Matrix {
     friend class Vector;
     friend class Kernel;
   private:
+    void Init();
     explicit Matrix(gsl_matrix *mat);
-    explicit Matrix(double *data, size_t height, size_t width);
     size_t NumberOfRows(FILE *f);
     size_t NumberOfColumns(FILE *f);
     gsl_matrix* m;

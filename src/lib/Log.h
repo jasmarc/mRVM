@@ -9,6 +9,7 @@ extern int verbosity;  // Set to 1, 2, 3 for norm, verbose, debug, 0 for silent
 #define VERBOSE    2
 #define DEBUG      3
 
-#define LOG(L, format, ...) if (verbosity >= L) fprintf (stderr, format, ## __VA_ARGS__);
+#define LOG(L, format, ...) if (verbosity >= L) \
+          fprintf(stderr, format, ## __VA_ARGS__);
 
 #endif  // SRC_LIB_LOG_H_

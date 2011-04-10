@@ -30,6 +30,7 @@ class Vector {
     char * ToString();
     friend class Matrix;
   private:
+    explicit Vector(gsl_vector *vec);
     size_t NumberOfElements(FILE *f);
     gsl_vector *v;
     char *to_str;

@@ -3,6 +3,7 @@
 #include <gsl/gsl_cdf.h>
 
 #include "lib/RandomNumberGenerator.h"
+#include "lib/Log.h"
 
 namespace jason {
 
@@ -11,10 +12,12 @@ RandomNumberGenerator::RandomNumberGenerator() {
   gsl_rng_env_setup();
   T = gsl_rng_default;
   r = gsl_rng_alloc(T);
+  LOG(DEBUG, "\t\t\tgsl_rng_alloc\n");
 }
 
 RandomNumberGenerator::~RandomNumberGenerator() {
   gsl_rng_free(r);
+  LOG(DEBUG, "\t\t\tgsl_rng_free\n");
 }
 
 double RandomNumberGenerator::SampleGaussian(double sigma) {

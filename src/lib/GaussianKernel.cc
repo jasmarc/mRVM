@@ -14,11 +14,17 @@ GaussianKernel::GaussianKernel(Matrix *m1, Matrix *m2, int param)
   for (size_t i = 0; i < theta->Size(); ++i) {
     theta->Set(i, static_cast<double>(param));
   }
+  LOG(DEBUG, "== theta\n");
   this->theta = new Matrix(theta);
+  LOG(DEBUG, "== theta\n");
   delete theta;
 }
 
 GaussianKernel::~GaussianKernel() {
+  LOG(DEBUG, "GaussianKernel Destructor.\n");
+  LOG(DEBUG, "== theta\n");
+  delete this->theta;
+  LOG(DEBUG, "== theta\n");
 }
 
 double GaussianKernel::KernelElementFunction(Vector *vec1, Vector *vec2) {

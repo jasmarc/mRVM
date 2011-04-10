@@ -131,7 +131,8 @@ int main(int argc, char **argv) {
     fprintf(stderr, "%s: Error - Test file must be specified.\n\n", PACKAGE);
     print_help(1);
   } else if (kernel_param == -1 && kernel != LINEAR) {
-    fprintf(stderr, "%s: Error - Must specify param for non-linear kernel.\n\n", PACKAGE);
+    fprintf(stderr, "%s: Error - Must specify param for non-linear kernel.\n\n",
+        PACKAGE);
     print_help(1);
   }
 
@@ -226,10 +227,11 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
 
   // Pass in training points, labels, and number of classes
   Trainer *trainer = new Trainer(train, labels, classes, train_kernel);
-  trainer->Process();
+  trainer->Process(tau, upsilon);
 
   // Pass in the w matrix, the training points, and the testing points
-  Predictor *predictor = new Predictor(trainer->GetW(), train, test, test_kernel);
+  Predictor *predictor = new Predictor(trainer->GetW(), train, test,
+      test_kernel);
   Matrix *predictions = predictor->Predict();
 
   LOG(NORMAL, "= Predictions: =\n");
@@ -240,6 +242,9 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
     PerformEvaluation(predictions, answers);
     delete answers;
   }
+  delete train;
+  delete labels;
+  delete test;
   delete predictions;
   delete predictor;
   delete trainer;

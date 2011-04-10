@@ -5,14 +5,13 @@ VERBOSITY=${1-1}
 #   --track-origins=yes \
 #   --leak-check=full \
 #   --show-reachable=yes \
-#   --suppressions=./tools/darwin9.supp \
 ./bin/mRVM \
   -k GAUSSIAN \
   -v $VERBOSITY \
-  --train   ./data/train.dat \
-  --labels  ./data/labels.dat \
-  --test    ./data/test.dat \
-  --answers ./data/answers.dat \
-  --param   1 \
-  --tau     0.75 \
-  --upsilon 0.34
+  --train   ./data/iris.train.dat \
+  --labels  ./data/iris.labels.dat \
+  --test    ./data/iris.test.dat \
+  --answers ./data/iris.answers.dat \
+  --param   2 \
+  --tau     0.0001 \
+  --upsilon 0.0001

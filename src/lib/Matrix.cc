@@ -4,24 +4,31 @@
 
 #include <gsl/gsl_statistics.h>
 
+#include <cstring>
+
 #include "lib/Matrix.h"
 #include "lib/Log.h"
 
 namespace jason {
 
 Matrix::Matrix(size_t height, size_t width) {
-  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
+  LOG(DEBUG, "Matrix Constructor with height and width.\n");
+  Init();
   this->m = gsl_matrix_alloc(height, width);
+  LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
 }
 
 Matrix::Matrix(gsl_matrix *mat) {
-  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
+  LOG(DEBUG, "Matrix Constructor with mat.\n");
+  Init();
   this->m = mat;
 }
 
 Matrix::Matrix(Vector *vec) {
-  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
+  LOG(DEBUG, "Matrix Constructor with vector.\n");
+  Init();
   gsl_matrix *mat = gsl_matrix_alloc(vec->v->size, vec->v->size);
+  LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
   gsl_vector_view diag = gsl_matrix_diagonal(mat);
   gsl_matrix_set_all(mat, 0.0);
   gsl_vector_memcpy(&diag.vector, vec->v);
@@ -29,8 +36,10 @@ Matrix::Matrix(Vector *vec) {
 }
 
 Matrix::Matrix(double *data, size_t height, size_t width) {
-  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
+  LOG(DEBUG, "Matrix Constructor with data, height, width.\n");
+  Init();
   this->m = gsl_matrix_alloc(height, width);
+  LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
   for (size_t row = 0; row < height; ++row) {
     for (size_t col = 0; col < width; ++col) {
       gsl_matrix_set(m, row, col, *(data + row * width + col));
@@ -39,15 +48,21 @@ Matrix::Matrix(double *data, size_t height, size_t width) {
 }
 
 Matrix::Matrix(const char* filename) {  // TODO(jrm): move to another class
-  to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
+  LOG(DEBUG, "Matrix Constructor with filename %s.\n", filename);
+  Init();
   int rows, cols;
   FILE *f;
   f = fopen(filename, "r");
   if (f) {
     rows = NumberOfRows(f);
     cols = NumberOfColumns(f);
+    LOG(DEBUG, "rows: %d, cols: %d\n", rows, cols);
     this->m = gsl_matrix_alloc(rows, cols);
-    gsl_matrix_fscanf(f, this->m);
+    LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
+    if (gsl_matrix_fscanf(f, this->m) == GSL_EFAILED) {
+      perror("Error");
+      throw("File read error.");
+    }
     fclose(f);
   } else {
     perror("Error");
@@ -55,20 +70,35 @@ Matrix::Matrix(const char* filename) {  // TODO(jrm): move to another class
   }
 }
 
+void Matrix::Init() {
+  LOG(DEBUG, "Matrix Init\n");
+  this->to_str = reinterpret_cast<char*>(malloc(256 * sizeof(*to_str)));
+  means = NULL;
+  stdevs = NULL;
+}
+
 Matrix::~Matrix() {
-  free(to_str);
+  LOG(DEBUG, "Matrix Destructor.\n");
+  free(this->to_str);
   gsl_matrix_free(this->m);
+  LOG(DEBUG, "\t\t\tgsl_matrix_free\n");
+  if (means != NULL) {
+    delete means;
+    delete stdevs;
+  }
 }
 
 void Matrix::Invert() {
   int n = this->Width();
   gsl_matrix *inverse = gsl_matrix_alloc(n, n);
+  LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
   gsl_permutation *perm = gsl_permutation_alloc(n);
   int s = 0;
   gsl_linalg_LU_decomp(m, perm, &s);
   gsl_linalg_LU_invert(m, perm, inverse);
   gsl_permutation_free(perm);
   gsl_matrix_free(m);
+  LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
   m = inverse;
 }
 
@@ -87,13 +117,13 @@ void Matrix::Add(Matrix *other) {
 Vector* Matrix::Row(size_t row) {
   gsl_vector *v = gsl_vector_alloc(this->Width());
   gsl_matrix_get_row(v, m, row);
-  return new Vector(v->data, v->size);
+  return new Vector(v);
 }
 
 Vector* Matrix::Column(size_t col) {
   gsl_vector *v = gsl_vector_alloc(this->Height());
   gsl_matrix_get_col(v, m, col);
-  return new Vector(v->data, v->size);
+  return new Vector(v);
 }
 
 void Matrix::SetRow(size_t row, Vector *vec) {
@@ -175,15 +205,26 @@ Vector* Matrix::GetStdevs() {
   return stdevs;
 }
 
-char * Matrix::ToString() {
-  to_str[0] = NULL;
+char* Matrix::ToString() {
+  LOG(DEBUG, "Matrix ToString\n");
+  #define kElementSize 12
+  this->to_str[0] = NULL;
+  size_t total = 0;
   for (size_t row = 0; row < this->Height(); ++row) {
     for (size_t col = 0; col < this->Width(); ++col) {
-      snprintf(to_str, 256 * sizeof(*to_str), "%s%.3f\t", to_str, this->Get(row, col));
+      char temp[kElementSize];
+      snprintf(temp, kElementSize, "%.3f\t", this->Get(row, col));
+      strncat(this->to_str, temp, kElementSize);
+      total += strlen(temp);
+      if (total + kElementSize + 1 > 255) break;
     }
-    snprintf(to_str, 256 * sizeof(*to_str), "%s\n", to_str);
+    char temp[1];
+    snprintf(temp, kElementSize, "\n");
+    strncat(this->to_str, temp, 1);
+    total += 1;
+    if (total + kElementSize > 255) break;
   }
-  return to_str;
+  return this->to_str;
 }
 
 size_t Matrix::Height() {
@@ -194,42 +235,41 @@ size_t Matrix::Width() {
   return this->m->size2;
 }
 
-Matrix* Matrix::Multiply(Matrix *other) {
+Matrix* Matrix::Multiply(Matrix *other) {  // TODO(jrm) dimension checking
   gsl_matrix *result = gsl_matrix_alloc(this->Height(), other->Height());
+  LOG(DEBUG, "\t\t\tgsl_matrix_alloc\n");
   cblas_dgemm(CblasRowMajor,  // const enum CBLAS_ORDER Order
       CblasNoTrans,           // const enum CBLAS_TRANSPOSE TransA
       CblasTrans,             // const enum CBLAS_TRANSPOSE TransB
       this->Height(),         // const int M
       other->Height(),        // const int N
-      this->Width(),          // const int K
+      other->Width(),         // const int K
       1.0f,                   // const double alpha
       this->m->data,          // const double * A
-      this->Width(),          // const int lda
+      this->Height(),         // const int lda
       other->m->data,         // const double * B
-      other->Width(),         // const int ldb
+      other->Height(),        // const int ldb
       0.0f,                   // const double beta
       result->data,           // double * C
-      result->size2);         // const int ldc
-  return new Matrix(result->data, this->Height(), other->Height());
+      this->Height());        // const int ldc
+  return new Matrix(result);
 }
 
-Vector* Matrix::Multiply(Vector *vec) {
-  gsl_vector *result = gsl_vector_calloc(vec->Size());
-  cblas_dgemm(CblasRowMajor,  // const enum CBLAS_ORDER Order
+Vector* Matrix::Multiply(Vector *vec) {  // TODO(jrm) dimension checking
+  gsl_vector *result = gsl_vector_alloc(vec->Size());
+  cblas_dgemv(CblasRowMajor,  // const enum CBLAS_ORDER Order
       CblasNoTrans,           // const enum CBLAS_TRANSPOSE TransA
-      CblasTrans,             // const enum CBLAS_TRANSPOSE TransB
       this->Height(),         // const int M (height of A)
-      vec->Size(),            // const int N (width of B)
-      this->Width(),          // const int K (width of A)
+      this->Width(),          // const int N (width of B)
       1.0f,                   // const double alpha
       this->m->data,          // const double * A
-      m->size2,               // const int lda
-      vec->v->data,           // const double * B
-      vec->Size(),            // const int ldb
+      this->Height(),         // const int lda
+      vec->v->data,           // const double * x
+      1,                      // const int incx
       0.0f,                   // const double beta
-      result->data,           // double * C
-      1);                     // const int ldc
-  return new Vector(result->data, result->size);
+      result->data,           // double * y
+      1);                     // const int incy
+  return new Vector(result);
 }
 
 size_t Matrix::NumberOfRows(FILE *f) {  // TODO(jrm): move to another class

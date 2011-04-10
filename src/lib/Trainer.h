@@ -16,7 +16,7 @@ class Trainer {
     explicit Trainer(Matrix *matrix, Vector *labels, size_t classes,
         Kernel *kernel);
     virtual ~Trainer();
-    void Process();
+    void Process(double tau, double upsilon);
     Matrix *GetW();
 
   private:
@@ -30,7 +30,7 @@ class Trainer {
     Matrix *y;
 
     void InitializeYAW();
-    void UpdateA(double tau, double v);
+    void UpdateA(double tau, double upsilon);
     void UpdateW();
     void UpdateY();
 };
