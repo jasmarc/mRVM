@@ -234,8 +234,8 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
       test_kernel);
   Matrix *predictions = predictor->Predict();
 
-  LOG(NORMAL, "= Predictions: =\n");
-  LOG(NORMAL, "%s\n", predictions->ToString());
+  LOG(VERBOSE, "= Predictions: =\n");
+  LOG(VERBOSE, "%s\n", predictions->ToString());
 
   if (answers_filename != NULL) {
     Vector *answers = new Vector(answers_filename);
@@ -255,7 +255,7 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
 }
 
 void PerformEvaluation(Matrix *predictions, Vector *answers) {
-  LOG(NORMAL, "= Evaluation =\n");
+  LOG(DEBUG, "= Evaluation =\n");
   size_t total_correct = 0;
   for (size_t row = 0; row < predictions->Height(); ++row) {
     double max = 0.0;
