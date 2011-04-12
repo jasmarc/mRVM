@@ -12,6 +12,7 @@ VERBOSITY=${1-1}
   --labels  ./data/iris.labels.dat \
   --test    ./data/iris.test.dat \
   --answers ./data/iris.answers.dat \
+  --out     ./data/iris.out.dat \
   --param   2 \
   --tau     0.0001 \
   --upsilon 0.0001

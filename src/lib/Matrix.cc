@@ -88,6 +88,24 @@ Matrix::~Matrix() {
   }
 }
 
+void Matrix::Write(const char* filename) {  // TODO(jrm): move to another class
+  LOG(DEBUG, "Matrix Write.\n");
+  FILE *f;
+  f = fopen(filename, "w");
+  if (f) {
+    for (size_t row = 0; row < this->Height(); ++row) {
+      for (size_t col = 0; col < this->Width(); ++col) {
+        fprintf(f, "%.3f ", this->Get(row, col));
+      }
+      fprintf(f, "\n");
+    }
+    fclose(f);
+  } else {
+    perror("Error");
+    throw("File write error.");
+  }
+}
+
 void Matrix::Invert() {
   int n = this->Width();
   gsl_matrix *inverse = gsl_matrix_alloc(n, n);

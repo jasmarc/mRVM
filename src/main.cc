@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
   char *labels_filename;
   char *test_filename;
   char *answers_filename;
+  char *out_filename;
   KernelType kernel = LINEAR;
   char *str_kernel;
   int kernel_param = -1;
@@ -50,6 +51,7 @@ int main(int argc, char **argv) {
       { "labels",   1, NULL,      'l' },
       { "test",     1, NULL,      't' },
       { "answers",  1, NULL,      'a' },
+      { "out",      1, NULL,      'o' },
       { "kernel",   1, NULL,      'k' },
       { "param",    1, NULL,      'p' },
       { "tau",      1, NULL,      'T' },
@@ -81,6 +83,9 @@ int main(int argc, char **argv) {
       break;
     case 'a':
       answers_filename = optarg;
+      break;
+    case 'o':
+      out_filename = optarg;
       break;
     case 'k':
       handleKernelOption(&kernel, &str_kernel);
@@ -116,6 +121,7 @@ int main(int argc, char **argv) {
   LOG(VERBOSE, "Labels file     = %s\n", labels_filename);
   LOG(VERBOSE, "Test file       = %s\n", test_filename);
   LOG(VERBOSE, "Answers file    = %s\n", answers_filename);
+  LOG(VERBOSE, "Out file        = %s\n", out_filename);
   LOG(VERBOSE, "Kernel param    = %d\n", kernel_param);
   LOG(VERBOSE, "Tau param       = %.3f\n", tau);
   LOG(VERBOSE, "Upsilon param   = %.3f\n", upsilon);
@@ -136,8 +142,8 @@ int main(int argc, char **argv) {
     print_help(1);
   }
 
-  run(train_filename, labels_filename, test_filename, answers_filename, kernel,
-      kernel_param, tau, upsilon);
+  run(train_filename, labels_filename, test_filename, answers_filename, out_filename,
+      kernel, kernel_param, tau, upsilon);
 
   return 0;
 }
@@ -168,6 +174,7 @@ void print_help(int exval) {
   printf("  -l, --labels  FILE set input file (required)\n");
   printf("  -t, --test    FILE set input file (required)\n");
   printf("  -a, --answers FILE set input file (required)\n");
+  printf("  -o, --out     FILE set output file\n");
   printf("  -k, --kernel       specify the kernel:\n");
   printf("                       LINEAR (default)\n");
   printf("                       POLYNOMIAL\n");
@@ -189,8 +196,8 @@ void print_help(int exval) {
 }
 
 void run(char *train_filename, char *labels_filename, char *test_filename,
-    char *answers_filename, KernelType kernel_type, int kernel_param,
-    double tau, double upsilon) {
+    char *answers_filename, char *out_filename, KernelType kernel_type, 
+    int kernel_param, double tau, double upsilon) {
   Matrix *train  = new Matrix(train_filename);
   Vector *labels = new Vector(labels_filename);
   Matrix *test   = new Matrix(test_filename);
@@ -237,11 +244,16 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
   LOG(VERBOSE, "= Predictions: =\n");
   LOG(VERBOSE, "%s\n", predictions->ToString());
 
-  if (answers_filename != NULL) {
+  if (answers_filename) {
     Vector *answers = new Vector(answers_filename);
     PerformEvaluation(predictions, answers);
     delete answers;
   }
+  
+  if (out_filename) {
+    predictions->Write(out_filename);
+  }
+  
   delete train;
   delete labels;
   delete test;

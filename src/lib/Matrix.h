@@ -22,6 +22,7 @@ class Matrix {
     explicit Matrix(Vector *vec);
     explicit Matrix(const char* filename);
     virtual ~Matrix();
+    void Write(const char* filename);
     size_t Height();
     size_t Width();
     void Invert();

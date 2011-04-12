@@ -35,7 +35,7 @@ void Trainer::Process(double tau, double upsilon) {
   LOG(DEBUG, "%s\n", k->ToString());
 
   InitializeYAW();
-  for (int i = 0; i < 20; ++i) {
+  for (int i = 0; i < 1; ++i) {
     UpdateW();
     UpdateA(tau, upsilon);
     UpdateY();
