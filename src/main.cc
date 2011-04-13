@@ -24,19 +24,19 @@ int main(int argc, char **argv) {
 namespace jason {
 
 int main(int argc, char **argv) {
-  int opt;
+  int opt = 0;
   int long_opt_index = 0;
 
-  char *train_filename;
-  char *labels_filename;
-  char *test_filename;
-  char *answers_filename;
-  char *out_filename;
+  char *train_filename = NULL;
+  char *labels_filename = NULL;
+  char *test_filename = NULL;
+  char *answers_filename = NULL;
+  char *out_filename = NULL;
   KernelType kernel = LINEAR;
-  char *str_kernel;
+  char *str_kernel = NULL;
   int kernel_param = -1;
-  double tau;
-  double upsilon;
+  double tau = 0;
+  double upsilon = 0;
 
   // no arguments given
   if (argc == 1) {
@@ -251,6 +251,7 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
   }
   
   if (out_filename) {
+    LOG(VERBOSE, "Writing to file %s.\n", out_filename);
     predictions->Write(out_filename);
   }
   
