@@ -1,5 +1,7 @@
 // Copyright 2011 Jason Marcell
 
+#include <cstring>
+
 #include "lib/Vector.h"
 #include "lib/Log.h"
 
@@ -40,12 +42,20 @@ Vector::Vector(const char* filename) {
 }
 
 char* Vector::ToString() {
+  LOG(DEBUG, "Vector ToString\n");
+  #define kElementSize 12
   this->to_str[0] = NULL;
+  size_t total = 0;
   for (size_t j = 0; j < v->size; j++) {
-    snprintf(this->to_str, 256 * sizeof(*this->to_str), "%s%.3f\t",
-      this->to_str, gsl_vector_get(v, j));
+    char temp[kElementSize];
+    snprintf(temp, kElementSize, "%.3f\t", this->Get(j));
+    strncat(this->to_str, temp, kElementSize);
+    total += strlen(temp);
+    if (total + kElementSize + 1 > 255) break;
   }
-  snprintf(this->to_str, 256 * sizeof(*this->to_str), "%s\n", this->to_str);
+  char temp[1];
+  snprintf(temp, kElementSize, "\n");
+  strncat(this->to_str, temp, 1);
   return this->to_str;
 }
 
