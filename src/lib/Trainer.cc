@@ -7,6 +7,8 @@
 #include "lib/LinearKernel.h"
 #include "lib/Log.h"
 
+#define EPSILON 0.001
+#define MAX_ITER 100
 namespace jason {
 
 Trainer::Trainer(Matrix *matrix, Vector *labels, size_t classes,
@@ -17,6 +19,7 @@ Trainer::Trainer(Matrix *matrix, Vector *labels, size_t classes,
   this->features = matrix->Width();
   this->classes = classes;
   this->k = kernel;
+  this->converged = false;
 }
 
 Trainer::~Trainer() {
@@ -35,7 +38,8 @@ void Trainer::Process(double tau, double upsilon) {
   LOG(DEBUG, "%s\n", k->ToString());
 
   InitializeYAW();
-  for (int i = 0; i < 1; ++i) {
+  for (size_t i = 0; i < MAX_ITER && !converged; ++i) {
+    LOG(DEBUG, "Iteration: %zu\n", i);
     UpdateW();
     UpdateA(tau, upsilon);
     UpdateY();
@@ -76,10 +80,17 @@ void Trainer::InitializeYAW() {
 
 void Trainer::UpdateA(double tau, double upsilon) {
   LOG(DEBUG, "= UpdateA. =\n");
+  this->converged = true;
   for (size_t row = 0; row < samples; ++row) {
     for (size_t col = 0; col < classes; ++col) {
-      double val = w->Get(row, col);
-      a->Set(row, col, (2*tau + 1)/(val*val + 2*upsilon));
+      double wval = w->Get(row, col);
+      double oldval = a->Get(row, col);
+      double newval = (2*tau + 1)/(wval*wval + 2*upsilon);
+      a->Set(row, col, newval);
+      LOG(DEBUG, "UpdateA: %.3f\t%.3f\t%.3f\n", oldval, newval, fabs(oldval - newval));
+      if (fabs(oldval - newval) > EPSILON) {
+        this->converged = false;
+      }
     }
   }
 }

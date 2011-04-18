@@ -14,5 +14,5 @@ VERBOSITY=${1-1}
   --answers ./data/iris.answers.dat \
   --out     ./data/iris.out.dat \
   --param   2 \
-  --tau     0.0001 \
-  --upsilon 0.0001
+  --tau     0.000001 \
+  --upsilon 0.000001

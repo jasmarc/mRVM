@@ -24,6 +24,8 @@ class Trainer {
     Vector *t;  // Labels
     size_t samples, features, classes;
 
+    bool converged;
+
     Matrix *w;
     Kernel *k;
     Matrix *a;
