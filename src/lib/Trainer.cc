@@ -81,22 +81,40 @@ void Trainer::InitializeYAW() {
 void Trainer::UpdateA(double tau, double upsilon) {
   LOG(DEBUG, "= UpdateA. =\n");
   this->converged = true;
+  Vector *removal_vector = new Vector(a->Height());
   for (size_t row = 0; row < samples; ++row) {
+    bool purge = true;
     for (size_t col = 0; col < classes; ++col) {
       double wval = w->Get(row, col);
       double oldval = a->Get(row, col);
       double newval = (2*tau + 1)/(wval*wval + 2*upsilon);
       a->Set(row, col, newval);
-      LOG(DEBUG, "UpdateA: %.3f\t%.3f\t%.3f\n", oldval, newval, fabs(oldval - newval));
+      LOG(DEBUG, "UpdateA: %.3f\t%.3f\t%.3f\n",
+        oldval, newval, fabs(oldval - newval));
       if (fabs(oldval - newval) > EPSILON) {
         this->converged = false;
       }
+      if (newval < 1000) {
+        purge = false;
+      }
     }
+    LOG(DEBUG, "%s.\n", purge ? "purge" : "no purge");
+    removal_vector->Set(row, purge ? 0.0 : 1.0);
   }
+  x->RemoveRows(removal_vector);
+  k->RemoveRows(removal_vector);
+  a->RemoveRows(removal_vector);
+  w->RemoveRows(removal_vector);
+  samples = k->Height();
+  delete removal_vector;
 }
 
 void Trainer::UpdateW() {
   LOG(DEBUG, "= UpdateW. =\n");
+  LOG(DEBUG, "k is %zux%zu\n", k->Height(), k->Width());
+  LOG(DEBUG, "y is %zux%zu\n", y->Height(), y->Width());
+  LOG(DEBUG, "a is %zux%zu\n", a->Height(), a->Width());
+  LOG(DEBUG, "w is %zux%zu\n", w->Height(), w->Width());
   for (size_t col = 0; col < classes; ++col) {
     Vector *A_c = a->Column(col);
     Matrix *A = new Matrix(A_c);
@@ -104,7 +122,7 @@ void Trainer::UpdateW() {
     Matrix *w_temp1 = k->Multiply(k);
     w_temp1->Add(A);
     w_temp1->Invert();
-    Matrix *w_temp2 = w_temp1->Multiply(k);
+    Matrix *w_temp2 = w_temp1->MultiplyNoTrans(k);
     Vector *W_c = w_temp2->Multiply(Y_c);
     w->SetColumn(col, W_c);
     delete w_temp2;
@@ -118,11 +136,17 @@ void Trainer::UpdateW() {
 
 void Trainer::UpdateY() {
   LOG(DEBUG, "= UpdateY. =\n");
+  LOG(DEBUG, "k is %zux%zu\n", k->Height(), k->Width());
+  LOG(DEBUG, "y is %zux%zu\n", y->Height(), y->Width());
+  LOG(DEBUG, "a is %zux%zu\n", a->Height(), a->Width());
+  LOG(DEBUG, "w is %zux%zu\n", w->Height(), w->Width());
   RandomNumberGenerator *r = new RandomNumberGenerator();
   for (size_t n = 0; n < samples; ++n) {
+    LOG(DEBUG, "n = %zu.\n", n);
     size_t i = (size_t)t->Get(n);
-    Vector *k_n = k->Row(n);
+    Vector *k_n = k->Column(n);
     for (size_t c = 0; c < classes; ++c) {
+      LOG(DEBUG, "c = %zu.\n", c);
       Vector *w_c = w->Column(c);
       Vector *w_i = w->Column(i);
       double wckn = w_c->Multiply(k_n);
@@ -138,6 +162,7 @@ void Trainer::UpdateY() {
           double den = r->GaussianCDF(u + wikn - wckn);
           for (size_t j = 0; j < classes; ++j) {
             if (j != i && j != c) {
+              LOG(DEBUG, "j = %zu.\n", j);
               Vector *w_j = w->Column(j);
               double wjkn = w_j->Multiply(k_n);
               num *= r->GaussianCDF(u + wikn - wjkn);

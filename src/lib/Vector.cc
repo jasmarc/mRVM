@@ -95,12 +95,24 @@ Matrix *Vector::RepmatHoriz(size_t k) {
 }
 
 double Vector::Multiply(Vector *other) {
+  LOG(DEBUG, "Multiplying two vectors: %zu %zu\n",
+    this->Size(), other->Size());
+  if (this->Size() != other->Size()) {
+    fprintf(stderr, "Dimension Error.\n");
+    exit(1);
+  }
   double result;
   gsl_blas_ddot(this->v, other->v, &result);
   return result;
 }
 
 Vector *Vector::Multiply(Matrix *m) {
+  LOG(DEBUG, "Multiplying a vector by a matrix: %zu %zux%zu\n",
+    this->Size(), m->Height(), m->Width());
+  if (this->Size() != m->Height()) {
+    fprintf(stderr, "Dimension Error.\n");
+    exit(1);
+  }
   gsl_vector *result = gsl_vector_alloc(m->Width());
   cblas_dgemm(CblasRowMajor,  // const enum CBLAS_ORDER Order
       CblasNoTrans,           // const enum CBLAS_TRANSPOSE TransA

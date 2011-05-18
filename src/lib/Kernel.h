@@ -14,6 +14,7 @@ enum KernelType { LINEAR, POLYNOMIAL, GAUSSIAN };
 class Kernel: public jason::Matrix {
   public:
     Kernel(Matrix *m1, Matrix *m2);
+    explicit Kernel(gsl_matrix *mat);
     virtual ~Kernel();
     void Init();
     virtual double KernelElementFunction(Vector *vec1, Vector *vec2) = 0;

@@ -23,6 +23,8 @@ class Matrix {
     explicit Matrix(const char* filename);
     virtual ~Matrix();
     void Write(const char* filename);
+    void RemoveRows(Vector *rows);
+    void RemoveColumns(Vector *columns);
     size_t Height();
     size_t Width();
     void Invert();
@@ -41,6 +43,7 @@ class Matrix {
     Vector* GetStdevs();
     char *ToString();
     Matrix* Multiply(Matrix *other);
+    Matrix* MultiplyNoTrans(Matrix *other);
     Vector* Multiply(Vector *vec);
     friend class Vector;
     friend class Kernel;

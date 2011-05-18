@@ -142,8 +142,8 @@ int main(int argc, char **argv) {
     print_help(1);
   }
 
-  run(train_filename, labels_filename, test_filename, answers_filename, out_filename,
-      kernel, kernel_param, tau, upsilon);
+  run(train_filename, labels_filename, test_filename, answers_filename,
+      out_filename, kernel, kernel_param, tau, upsilon);
 
   return 0;
 }
@@ -196,7 +196,7 @@ void print_help(int exval) {
 }
 
 void run(char *train_filename, char *labels_filename, char *test_filename,
-    char *answers_filename, char *out_filename, KernelType kernel_type, 
+    char *answers_filename, char *out_filename, KernelType kernel_type,
     int kernel_param, double tau, double upsilon) {
   Matrix *train  = new Matrix(train_filename);
   Vector *labels = new Vector(labels_filename);
@@ -215,17 +215,14 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
   case LINEAR:
     LOG(DEBUG, "Creating Linear Kernels.\n");
     train_kernel = new LinearKernel(train, train);
-    test_kernel = new LinearKernel(train, test);
     break;
   case POLYNOMIAL:
     LOG(DEBUG, "Creating Polynomial Kernels.\n");
     train_kernel = new PolynomialKernel(train, train, kernel_param);
-    test_kernel = new PolynomialKernel(train, test, kernel_param);
     break;
   case GAUSSIAN:
     LOG(DEBUG, "Creating Gaussian Kernels.\n");
     train_kernel = new GaussianKernel(train, train, kernel_param);
-    test_kernel = new GaussianKernel(train, test, kernel_param);
     break;
   default:
     fprintf(stderr, "%s: Error - No such kernel.\n", PACKAGE);
@@ -235,6 +232,24 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
   // Pass in training points, labels, and number of classes
   Trainer *trainer = new Trainer(train, labels, classes, train_kernel);
   trainer->Process(tau, upsilon);
+
+  switch (kernel_type) {
+  case LINEAR:
+    LOG(DEBUG, "Creating Linear Kernels.\n");
+    test_kernel = new LinearKernel(train, test);
+    break;
+  case POLYNOMIAL:
+    LOG(DEBUG, "Creating Polynomial Kernels.\n");
+    test_kernel = new PolynomialKernel(train, test, kernel_param);
+    break;
+  case GAUSSIAN:
+    LOG(DEBUG, "Creating Gaussian Kernels.\n");
+    test_kernel = new GaussianKernel(train, test, kernel_param);
+    break;
+  default:
+    fprintf(stderr, "%s: Error - No such kernel.\n", PACKAGE);
+    print_help(1);
+  }
 
   // Pass in the w matrix, the training points, and the testing points
   Predictor *predictor = new Predictor(trainer->GetW(), train, test,
@@ -249,12 +264,12 @@ void run(char *train_filename, char *labels_filename, char *test_filename,
     PerformEvaluation(predictions, answers);
     delete answers;
   }
-  
+
   if (out_filename) {
     LOG(VERBOSE, "Writing to file %s.\n", out_filename);
     predictions->Write(out_filename);
   }
-  
+
   delete train;
   delete labels;
   delete test;

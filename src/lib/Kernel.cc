@@ -14,6 +14,10 @@ Kernel::Kernel(Matrix *m1, Matrix *m2) : Matrix(m1->Height(), m2->Height()) {
   this->m2 = m2;
 }
 
+Kernel::Kernel(gsl_matrix *mat) : Matrix(mat) {
+  LOG(DEBUG, "Matrix Constructor with mat.\n");
+}
+
 Kernel::~Kernel() {
   LOG(DEBUG, "Base Kernel Destructor.\n");
 }

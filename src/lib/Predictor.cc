@@ -32,12 +32,16 @@ Matrix* Predictor::Predict() {
 }
 
 Matrix* Predictor::QuadratureApproximation() {
+  LOG(DEBUG, "QuadratureApproximation\n");
   RandomNumberGenerator *r = new RandomNumberGenerator();
   GaussHermiteQuadrature *g = new GaussHermiteQuadrature();
   double *points;
   double *weights;
   g->Process(3, &points, &weights);
   delete g;
+
+  LOG(DEBUG, "k is %zux%zu\n", k->Height(), k->Width());
+  LOG(DEBUG, "w is %zux%zu\n", w->Height(), w->Width());
 
   Matrix *result = new Matrix(k->Width(), w->Width());
   for (size_t n = 0; n < k->Width(); ++n) {
