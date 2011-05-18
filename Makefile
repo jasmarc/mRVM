@@ -31,6 +31,7 @@ $(EXEC):
 		$(SRC_DIR)/lib/Vector.cc \
 		$(SRC_DIR)/lib/Matrix.cc \
 		$(SRC_DIR)/lib/Trainer.cc \
+		$(SRC_DIR)/lib/Trainer2.cc \
 		$(SRC_DIR)/lib/Predictor.cc \
 		$(SRC_DIR)/lib/Kernel.cc \
 		$(SRC_DIR)/lib/LinearKernel.cc \
