@@ -107,6 +107,25 @@ void Matrix::Write(const char* filename) {  // TODO(jrm): move to another class
   }
 }
 
+Matrix* Matrix::RemoveRowsReturnMatrix(Vector *rows) {
+  LOG(DEBUG, "RemoveRows (returns new Matrix).\n");
+  size_t new_height = 0;
+  for (size_t row = 0; row < rows->Size(); ++row) {
+    new_height += rows->Get(row);
+  }
+  LOG(DEBUG, "New height = %zu.\n", new_height);
+  gsl_matrix *new_m = gsl_matrix_alloc(new_height, this->Width());
+  for (size_t ret_row = 0, row = 0; row < this->Height(); ++row) {
+    if (rows->Get(row) == 1) {
+      gsl_vector *v = gsl_vector_alloc(this->Width());
+      gsl_matrix_get_row(v, m, row);
+      gsl_matrix_set_row(new_m, ret_row++, v);
+      gsl_vector_free(v);
+    }
+  }
+  return new Matrix(new_m);
+}
+
 void Matrix::RemoveRows(Vector *rows) {
   LOG(DEBUG, "RemoveRows.\n");
   size_t new_height = 0;

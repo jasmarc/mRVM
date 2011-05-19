@@ -23,6 +23,7 @@ class Matrix {
     explicit Matrix(const char* filename);
     virtual ~Matrix();
     void Write(const char* filename);
+    Matrix* RemoveRowsReturnMatrix(Vector *rows);
     void RemoveRows(Vector *rows);
     void RemoveColumns(Vector *columns);
     size_t Height();
