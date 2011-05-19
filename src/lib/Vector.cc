@@ -94,6 +94,23 @@ Matrix *Vector::RepmatHoriz(size_t k) {
   return new Matrix(mat);
 }
 
+Vector *Vector::RemoveElementsReturnVector(Vector *rows) {
+  LOG(DEBUG, "RemoveElementsReturnVector.\n");
+  size_t new_height = 0;
+  for (size_t row = 0; row < rows->Size(); ++row) {
+    new_height += rows->Get(row);
+  }
+  LOG(DEBUG, "New height = %zu.\n", new_height);
+  gsl_vector *new_v = gsl_vector_alloc(new_height);
+  for (size_t ret_row = 0, row = 0; row < this->Size(); ++row) {
+    if (rows->Get(row) == 1) {
+      double val = this->Get(row);
+      gsl_vector_set(new_v, ret_row++, val);
+    }
+  }
+  return new Vector(new_v);
+}
+
 double Vector::Multiply(Vector *other) {
   LOG(DEBUG, "Multiplying two vectors: %zu %zu\n",
     this->Size(), other->Size());

@@ -22,6 +22,7 @@ class Vector {
     void Set(size_t elem, double value);
     Matrix *RepmatVert(size_t k);
     Matrix *RepmatHoriz(size_t k);
+    Vector *RemoveElementsReturnVector(Vector *rows);
     double Multiply(Vector *other);
     Vector *Multiply(Matrix *m);
     Vector *Subtract(Vector *other);
