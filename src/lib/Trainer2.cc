@@ -21,12 +21,14 @@ Trainer2::Trainer2(Matrix *matrix, Vector *labels, size_t classes,
   this->classes = classes;
   this->k = kernel;
   this->converged = false;
+  this->active_samples = new Vector(samples);
 }
 
 Trainer2::~Trainer2() {
   delete y;
   delete a;
   delete w;
+  delete active_samples;
 }
 
 void Trainer2::Process(double tau, double upsilon) {
@@ -40,6 +42,7 @@ void Trainer2::Process(double tau, double upsilon) {
 
   InitializeYAW();
   size_t first_sample_index = GetFirstSampleIndex();
+  active_samples->Set(first_sample_index, 1);
   for (size_t i = 0; i < MAX_ITER && !converged; ++i) {
     LOG(DEBUG, "Iteration: %zu\n", i);
     UpdateW();

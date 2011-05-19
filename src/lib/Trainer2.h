@@ -30,6 +30,7 @@ class Trainer2 {
     Kernel *k;
     Vector *a;
     Matrix *y;
+    Vector *active_samples;
 
     void InitializeYAW();
     size_t GetFirstSampleIndex();

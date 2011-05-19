@@ -9,7 +9,8 @@ namespace jason {
 
 Vector::Vector(size_t size) {
   to_str = reinterpret_cast<char*> (malloc(256 * sizeof(*to_str)));
-  this->v = gsl_vector_alloc(size);
+  // TODO(jrm): check if this is the same as gsl_vector_alloc
+  this->v = gsl_vector_calloc(size);
 }
 
 Vector::Vector(gsl_vector *vec) {
