@@ -28,7 +28,7 @@ class Trainer2 {
 
     Matrix *w;
     Kernel *k;
-    Matrix *a;
+    Vector *a;
     Matrix *y;
 
     void InitializeYAW();

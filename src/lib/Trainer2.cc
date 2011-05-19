@@ -7,6 +7,7 @@
 #include "lib/LinearKernel.h"
 #include "lib/Log.h"
 
+#define INF 9999
 #define EPSILON 0.001
 #define MAX_ITER 100
 namespace jason {
@@ -59,20 +60,20 @@ Matrix *Trainer2::GetW() {
 void Trainer2::InitializeYAW() {
   LOG(DEBUG, "= InitializeYAW. =\n");
   y = new Matrix(samples, classes);
-  a = new Matrix(samples, classes);
+  a = new Vector(samples);
   w = new Matrix(samples, classes);
   RandomNumberGenerator *r = new RandomNumberGenerator();
   for (size_t row = 0; row < samples; ++row) {
+    a->Set(row, INF);
     for (size_t col = 0; col < classes; ++col) {
       double y_val, a_val, w_val;
       if (t->Get(row) == col)
         y_val = r->SampleUniform(0, 10);
       else
         y_val = r->SampleUniform(0, 1);
-      a_val = 1;
+      a_val = a->Get(row);
       w_val = r->SampleGaussian(sqrt(1/a_val));
       y->Set(row, col, y_val);
-      a->Set(row, col, a_val);
       w->Set(row, col, w_val);
     }
   }
@@ -107,64 +108,28 @@ size_t Trainer2::GetFirstSampleIndex() {
 void Trainer2::UpdateA(double tau, double upsilon) {
   LOG(DEBUG, "= UpdateA. =\n");
   this->converged = true;
-  Vector *removal_vector = new Vector(a->Height());
-  for (size_t row = 0; row < samples; ++row) {
-    bool purge = true;
-    for (size_t col = 0; col < classes; ++col) {
-      double wval = w->Get(row, col);
-      double oldval = a->Get(row, col);
-      double newval = (2*tau + 1)/(wval*wval + 2*upsilon);
-      a->Set(row, col, newval);
-      LOG(DEBUG, "UpdateA: %.3f\t%.3f\t%.3f\n",
-        oldval, newval, fabs(oldval - newval));
-      if (fabs(oldval - newval) > EPSILON) {
-        this->converged = false;
-      }
-      if (newval < 1000) {
-        purge = false;
-      }
-    }
-    LOG(DEBUG, "%s.\n", purge ? "purge" : "no purge");
-    removal_vector->Set(row, purge ? 0.0 : 1.0);
-  }
-  x->RemoveRows(removal_vector);
-  k->RemoveRows(removal_vector);
-  a->RemoveRows(removal_vector);
-  w->RemoveRows(removal_vector);
-  samples = k->Height();
-  delete removal_vector;
+  // TODO(jrm): Serious re-work
+  // result = (C*si^2) / (sum(qci.^2)-C*si);
+  // if result<1e-5
+  //   result = 1e-6;
+  // end
 }
 
 void Trainer2::UpdateW() {
   LOG(DEBUG, "= UpdateW. =\n");
   LOG(DEBUG, "k is %zux%zu\n", k->Height(), k->Width());
   LOG(DEBUG, "y is %zux%zu\n", y->Height(), y->Width());
-  LOG(DEBUG, "a is %zux%zu\n", a->Height(), a->Width());
+  LOG(DEBUG, "a is 1x%zu\n", a->Size());
   LOG(DEBUG, "w is %zux%zu\n", w->Height(), w->Width());
-  for (size_t col = 0; col < classes; ++col) {
-    Vector *A_c = a->Column(col);
-    Matrix *A = new Matrix(A_c);
-    Vector *Y_c = y->Column(col);
-    Matrix *w_temp1 = k->Multiply(k);
-    w_temp1->Add(A);
-    w_temp1->Invert();
-    Matrix *w_temp2 = w_temp1->MultiplyNoTrans(k);
-    Vector *W_c = w_temp2->Multiply(Y_c);
-    w->SetColumn(col, W_c);
-    delete w_temp2;
-    delete w_temp1;
-    delete W_c;
-    delete Y_c;
-    delete A;
-    delete A_c;
-  }
+  // TODO(jrm): Serious re-work
+  // W(active_samples,:) = KKA_inv * Kstar * Y';
 }
 
 void Trainer2::UpdateY() {
   LOG(DEBUG, "= UpdateY. =\n");
   LOG(DEBUG, "k is %zux%zu\n", k->Height(), k->Width());
   LOG(DEBUG, "y is %zux%zu\n", y->Height(), y->Width());
-  LOG(DEBUG, "a is %zux%zu\n", a->Height(), a->Width());
+  LOG(DEBUG, "a is 1x%zu\n", a->Size());
   LOG(DEBUG, "w is %zux%zu\n", w->Height(), w->Width());
   RandomNumberGenerator *r = new RandomNumberGenerator();
   for (size_t n = 0; n < samples; ++n) {
