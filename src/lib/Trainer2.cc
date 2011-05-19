@@ -38,6 +38,7 @@ void Trainer2::Process(double tau, double upsilon) {
   LOG(DEBUG, "%s\n", k->ToString());
 
   InitializeYAW();
+  size_t first_sample_index = GetFirstSampleIndex();
   for (size_t i = 0; i < MAX_ITER && !converged; ++i) {
     LOG(DEBUG, "Iteration: %zu\n", i);
     UpdateW();
@@ -76,6 +77,31 @@ void Trainer2::InitializeYAW() {
     }
   }
   delete r;
+}
+
+size_t Trainer2::GetFirstSampleIndex() {
+  Vector *v = new Vector(k->Height());
+  Matrix *result = k->Multiply(y);
+  for (size_t row = 0; row < result->Height(); ++row) {
+    double num = 0.0;
+    double den = 0.0;
+    for (size_t col = 0; col < result->Width(); ++col) {
+      num += pow(result->Get(row, col), 2.0);
+      den += pow(k->Get(row, col), 2.0);
+    }
+    v->Set(row, (num / (classes * den)));
+  }
+  delete result;
+  size_t max_index = 0;
+  double max = -1.0;
+  for (size_t i; i < v->Size(); ++i) {
+    if (v->Get(i) > max) {
+      max = v->Get(i);
+      max_index = i;
+    }
+  }
+  delete v;
+  return max_index;
 }
 
 void Trainer2::UpdateA(double tau, double upsilon) {
