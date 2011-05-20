@@ -41,13 +41,66 @@ void Trainer2::Process(double tau, double upsilon) {
   LOG(DEBUG, "%s\n", k->ToString());
 
   InitializeYAW();
-  size_t first_sample_index = GetFirstSampleIndex();
-  active_samples->Set(first_sample_index, 1);
+  size_t current_sample_index = GetFirstSampleIndex();
+  active_samples->Set(current_sample_index, 1);
   for (size_t i = 0; i < MAX_ITER && !converged; ++i) {
     LOG(DEBUG, "Iteration: %zu\n", i);
-    UpdateW();
-    UpdateA(tau, upsilon);
-    UpdateY();
+    Matrix *kstar = k->RemoveRowsReturnMatrix(active_samples);
+    Matrix *astar = new Matrix(a->RemoveElementsReturnVector(active_samples));
+    Matrix *kka_inv = kstar->Multiply(kstar);
+    kka_inv->Add(astar);
+    kka_inv->Invert();
+    Vector *ki = k->Row(current_sample_index);
+    double ai = a->Get(current_sample_index);
+    bool is_already_in = (active_samples->Get(current_sample_index) == 1);
+    bool does_contribute;
+    double si;
+    Vector *qci;
+    if (i == 0) {
+      double kiki = ki->Multiply(ki);
+      Vector *kikstar = ki->Multiply(kstar);
+      Vector *kstarki = kstar->Multiply(ki);
+      Vector *kiy = ki->Multiply(y);
+      Matrix *kstary = kstar->Multiply(y);
+      Vector *temp1 = kikstar->Multiply(kka_inv);
+      double temp2 = temp1->Multiply(kstarki);
+      Vector *temp3 = temp1->Multiply(kstary);
+      double sm = kiki - temp2;
+      Vector *qcm = kiy->Subtract(temp3);
+      if (!is_already_in) {
+        si = sm;
+        qci = qcm;
+      } else {
+        si = ai*sm/(ai - sm);
+        qci = qcm;
+        for (size_t i; i < qci->Size(); ++i) {
+          qci->Set(i, ai*qci->Get(i) / (ai - sm));
+        }
+      }
+      delete qcm;  // TODO(jrm): probably don't do this
+      delete temp3;
+      delete temp1;
+      delete kstary;
+      delete kiy;
+      delete kstarki;
+      delete kikstar;
+    } else {
+      // TODO(jrm): missing code
+    }
+    if (does_contribute && is_already_in) {
+      // TODO(jrm): missing code
+    } else if (does_contribute && !is_already_in) {
+      // TODO(jrm): missing code
+    } else if (!does_contribute && is_already_in) {
+      // if (length(active_samples) != 1) {
+      // TODO(jrm): missing code
+      // }
+    }
+    delete qci;  // TODO(jrm): do this?
+    delete ki;
+    delete kka_inv;
+    delete astar;
+    delete kstar;
   }
 
   LOG(DEBUG, "= Printing w: =\n");
