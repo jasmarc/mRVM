@@ -47,9 +47,7 @@ void Trainer2::Process(double tau, double upsilon) {
     LOG(DEBUG, "Iteration: %zu\n", i);
     Matrix *kstar = k->RemoveRowsReturnMatrix(active_samples);
     Matrix *astar = new Matrix(a->RemoveElementsReturnVector(active_samples));
-    Matrix *kka_inv = kstar->Multiply(kstar);
-    kka_inv->Add(astar);
-    kka_inv->Invert();
+    Matrix *kka_inv = CalculateMiddlePart(kstar, astar);
     Vector *ki = k->Row(current_sample_index);
     double ai = a->Get(current_sample_index);
     bool is_already_in = (active_samples->Get(current_sample_index) == 1);
@@ -115,6 +113,13 @@ double Trainer2::Theta(double i, Matrix *q, Vector *s) {
     ret += pow(q->Get(c, i), 2.0);
   }
   return ret - (this->classes)*(s->Get(i));
+}
+
+Matrix *Trainer2::CalculateMiddlePart(Matrix *kstar, Matrix *astar) {
+  Matrix *kka_inv = kstar->Multiply(kstar);
+  kka_inv->Add(astar);
+  kka_inv->Invert();
+  return kka_inv;
 }
 
 Matrix *Trainer2::GetW() {

@@ -18,6 +18,7 @@ class Trainer2 {
     virtual ~Trainer2();
     void Process(double tau, double upsilon);
     double Theta(double i, Matrix *q, Vector *s);
+    Matrix *CalculateMiddlePart(Matrix *kstar, Matrix *astar);
     Matrix *GetW();
 
   private:
