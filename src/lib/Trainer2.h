@@ -17,6 +17,7 @@ class Trainer2 {
         Kernel *kernel);
     virtual ~Trainer2();
     void Process(double tau, double upsilon);
+    double Theta(double i, Matrix *q, Vector *s);
     Matrix *GetW();
 
   private:

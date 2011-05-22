@@ -109,6 +109,14 @@ void Trainer2::Process(double tau, double upsilon) {
   LOG(DEBUG, "== End Trainer. ==\n");
 }
 
+double Trainer2::Theta(double i, Matrix *q, Vector *s) {
+  double ret;
+  for (size_t c; c < this->classes; ++c) {
+    ret += pow(q->Get(c, i), 2.0);
+  }
+  return ret - (this->classes)*(s->Get(i));
+}
+
 Matrix *Trainer2::GetW() {
   return this->w;
 }
