@@ -55,16 +55,8 @@ void Trainer2::Process(double tau, double upsilon) {
     double si;
     Vector *qci;
     if (i == 0) {
-      double kiki = ki->Multiply(ki);
-      Vector *kikstar = ki->Multiply(kstar);
-      Vector *kstarki = kstar->Multiply(ki);
-      Vector *kiy = ki->Multiply(y);
-      Matrix *kstary = kstar->Multiply(y);
-      Vector *temp1 = kikstar->Multiply(kka_inv);
-      double temp2 = temp1->Multiply(kstarki);
-      Vector *temp3 = temp1->Multiply(kstary);
-      double sm = kiki - temp2;
-      Vector *qcm = kiy->Subtract(temp3);
+      double sm = CalculateSm(ki, kstar, kka_inv);
+      Vector *qcm = CalculateQcm(ki, kstar, kka_inv);
       if (!is_already_in) {
         si = sm;
         qci = qcm;
@@ -75,13 +67,6 @@ void Trainer2::Process(double tau, double upsilon) {
           qci->Set(i, ai*qci->Get(i) / (ai - sm));
         }
       }
-      delete qcm;  // TODO(jrm): probably don't do this
-      delete temp3;
-      delete temp1;
-      delete kstary;
-      delete kiy;
-      delete kstarki;
-      delete kikstar;
     } else {
       // TODO(jrm): missing code
     }
@@ -94,11 +79,6 @@ void Trainer2::Process(double tau, double upsilon) {
       // TODO(jrm): missing code
       // }
     }
-    delete qci;  // TODO(jrm): do this?
-    delete ki;
-    delete kka_inv;
-    delete astar;
-    delete kstar;
   }
 
   LOG(DEBUG, "= Printing w: =\n");
@@ -120,6 +100,33 @@ Matrix *Trainer2::CalculateMiddlePart(Matrix *kstar, Matrix *astar) {
   kka_inv->Add(astar);
   kka_inv->Invert();
   return kka_inv;
+}
+
+double Trainer2::CalculateSm(Vector *ki, Matrix *kstar, Matrix *kka_inv) {
+  double kiki = ki->Multiply(ki);
+  Vector *kikstar = ki->Multiply(kstar);
+  Vector *kstarki = kstar->Multiply(ki);
+  Vector *temp1 = kikstar->Multiply(kka_inv);
+  double temp2 = temp1->Multiply(kstarki);
+  double ret = kiki - temp2;
+  delete temp1;
+  delete kstarki;
+  delete kikstar;
+  return ret;
+}
+
+Vector *Trainer2::CalculateQcm(Vector *ki, Matrix *kstar, Matrix *kka_inv) {
+  Vector *kikstar = ki->Multiply(kstar);
+  Matrix *kstary = kstar->Multiply(y);
+  Vector *temp1 = kikstar->Multiply(kka_inv);
+  Vector *temp3 = temp1->Multiply(kstary);
+  Vector *kiy = ki->Multiply(y);
+  Vector *ret = kiy->Subtract(temp3);
+  delete temp3;
+  delete temp1;
+  delete kstary;
+  delete kikstar;
+  return ret;
 }
 
 Matrix *Trainer2::GetW() {
