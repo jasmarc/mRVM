@@ -53,29 +53,19 @@ void Trainer2::Process(double tau, double upsilon) {
     double ai = a->Get(current_sample_index);
     bool is_already_in = (active_samples->Get(current_sample_index) == 1);
     bool does_contribute;
-    double si;
-    Vector *qci;
-    if (i == 0) {
-      double sm = CalculateSm(ki, kstar, kka_inv);
-      Vector *qcm = CalculateQcm(ki, kstar, kka_inv);
-      if (!is_already_in) {
-        si = sm;
-        qci = qcm;
-      } else {
-        si = ai*sm/(ai - sm);
-        qci = qcm;
-        for (size_t i; i < qci->Size(); ++i) {
-          qci->Set(i, ai*qci->Get(i) / (ai - sm));
-        }
-      }
-      double qsum2;
+    double si = CalculateSm(ki, kstar, kka_inv);
+    Vector *qci = CalculateQcm(ki, kstar, kka_inv);
+    if (is_already_in) {
+      si = ai*si/(ai - si);
       for (size_t i; i < qci->Size(); ++i) {
-        qsum2 += pow(qci->Get(i), 2.0);
+        qci->Set(i, ai*qci->Get(i) / (ai - si));
       }
-      does_contribute = qsum2 > (classes*si);
-    } else {
-      // TODO(jrm): missing code
     }
+    double qsum2;
+    for (size_t i; i < qci->Size(); ++i) {
+      qsum2 += pow(qci->Get(i), 2.0);
+    }
+    does_contribute = qsum2 > (classes*si);
     if (does_contribute && is_already_in) {
       // TODO(jrm): missing code
     } else if (does_contribute && !is_already_in) {
