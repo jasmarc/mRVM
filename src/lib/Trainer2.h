@@ -21,6 +21,7 @@ class Trainer2 {
     Matrix *CalculateMiddlePart(Matrix *kstar, Matrix *astar);
     double CalculateSm(Vector *ki, Matrix *kstar, Matrix *kka_inv);
     Vector *CalculateQcm(Vector *ki, Matrix *kstar, Matrix *kka_inv);
+    double CalculateAlphaValue();
     Matrix *GetW();
 
   private:

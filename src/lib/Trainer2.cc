@@ -43,6 +43,7 @@ void Trainer2::Process(double tau, double upsilon) {
   InitializeYAW();
   size_t current_sample_index = GetFirstSampleIndex();
   active_samples->Set(current_sample_index, 1);
+  a->Set(current_sample_index, CalculateAlphaValue());
   for (size_t i = 0; i < MAX_ITER && !converged; ++i) {
     LOG(DEBUG, "Iteration: %zu\n", i);
     Matrix *kstar = k->RemoveRowsReturnMatrix(active_samples);
@@ -127,6 +128,11 @@ Vector *Trainer2::CalculateQcm(Vector *ki, Matrix *kstar, Matrix *kka_inv) {
   delete kstary;
   delete kikstar;
   return ret;
+}
+
+double Trainer2::CalculateAlphaValue() {
+  // TODO(jrm): From equation 15
+  return 0.0;
 }
 
 Matrix *Trainer2::GetW() {
