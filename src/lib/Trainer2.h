@@ -39,8 +39,8 @@ class Trainer2 {
 
     void InitializeYAW();
     size_t GetFirstSampleIndex();
-    void UpdateA(double tau, double upsilon);
-    void UpdateW();
+    void UpdateA();
+    void UpdateW(Matrix *kka_inv, Matrix *kstar);
     void UpdateY();
 };
 }

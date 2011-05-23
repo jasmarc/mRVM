@@ -187,7 +187,7 @@ size_t Trainer2::GetFirstSampleIndex() {
   return max_index;
 }
 
-void Trainer2::UpdateA(double tau, double upsilon) {
+void Trainer2::UpdateA() {
   LOG(DEBUG, "= UpdateA. =\n");
   this->converged = true;
   // TODO(jrm): Serious re-work
@@ -197,14 +197,20 @@ void Trainer2::UpdateA(double tau, double upsilon) {
   // end
 }
 
-void Trainer2::UpdateW() {
+void Trainer2::UpdateW(Matrix *kka_inv, Matrix *kstar) {
   LOG(DEBUG, "= UpdateW. =\n");
   LOG(DEBUG, "k is %zux%zu\n", k->Height(), k->Width());
   LOG(DEBUG, "y is %zux%zu\n", y->Height(), y->Width());
   LOG(DEBUG, "a is 1x%zu\n", a->Size());
   LOG(DEBUG, "w is %zux%zu\n", w->Height(), w->Width());
-  // TODO(jrm): Serious re-work
-  // W(active_samples,:) = KKA_inv * Kstar * Y';
+  Matrix *temp1 = kka_inv->MultiplyNoTrans(kstar);
+  Matrix *temp2 = temp1->Multiply(y);
+  size_t active_row = 0;
+  for (size_t row = 0; row < w->Height(); ++row) {
+    if (active_samples->Get(row) == 1) {
+      w->SetRow(row, temp2->Row(active_row++));
+    }
+  }
 }
 
 void Trainer2::UpdateY() {
