@@ -177,7 +177,7 @@ size_t Trainer2::GetFirstSampleIndex() {
   delete result;
   size_t max_index = 0;
   double max = -1.0;
-  for (size_t i; i < v->Size(); ++i) {
+  for (size_t i = 0; i < v->Size(); ++i) {
     if (v->Get(i) > max) {
       max = v->Get(i);
       max_index = i;
