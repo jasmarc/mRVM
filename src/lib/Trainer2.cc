@@ -68,6 +68,11 @@ void Trainer2::Process(double tau, double upsilon) {
           qci->Set(i, ai*qci->Get(i) / (ai - sm));
         }
       }
+      double qsum2;
+      for (size_t i; i < qci->Size(); ++i) {
+        qsum2 += pow(qci->Get(i), 2.0);
+      }
+      does_contribute = qsum2 > (classes*si);
     } else {
       // TODO(jrm): missing code
     }
