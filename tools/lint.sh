@@ -1,1 +1,1 @@
-find -E ./src -regex ".*\.(cc|h)" -exec ./tools/cpplint.py {} \;
+find -E ./src -regex ".*\.(cc|h)" -exec ./tools/cpplint.py {} \; 2>&1 | egrep -v ^Done | grep -v "found: 0"
