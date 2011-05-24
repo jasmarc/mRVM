@@ -39,7 +39,7 @@ class Trainer2 {
 
     void InitializeYAW();
     size_t GetFirstSampleIndex();
-    void UpdateA();
+    void UpdateA(size_t current_sample_index, double si, Vector *qi);
     void UpdateW(Matrix *kka_inv, Matrix *kstar);
     void UpdateY();
 };

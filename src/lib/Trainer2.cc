@@ -182,14 +182,15 @@ size_t Trainer2::GetFirstSampleIndex() {
   return max_index;
 }
 
-void Trainer2::UpdateA() {
+void Trainer2::UpdateA(size_t current_sample_index, double si, Vector *qi) {
   LOG(DEBUG, "= UpdateA. =\n");
-  this->converged = true;
-  // TODO(jrm): Serious re-work
-  // result = (C*si^2) / (sum(qci.^2)-C*si);
-  // if result<1e-5
-  //   result = 1e-6;
-  // end
+  double num = pow(classes*si, 2.0);
+  double den = 0;
+  for (size_t c = 0; c < qi->Size(); ++c) {
+    den += pow(qi->Get(c), 2.0);
+  }
+  double result = num / (den - classes*si);
+  a->Set(current_sample_index, result);
 }
 
 void Trainer2::UpdateW(Matrix *kka_inv, Matrix *kstar) {
