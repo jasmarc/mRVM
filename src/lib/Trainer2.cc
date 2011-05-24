@@ -72,7 +72,8 @@ void Trainer2::Process(double tau, double upsilon) {
       UpdateA(current_sample_index, si, qi);
       astar = new Matrix(a->RemoveElementsReturnVector(active_samples));
       kka_inv = CalculateMiddlePart(kstar, astar);
-      // TODO(jrm): update posteriors
+      UpdateW(kka_inv, kstar);
+      UpdateY();
     } else if (does_contribute && !is_already_in) {
       // if the sample can contribute to the model, but it is not inside
       // it, we include it.
@@ -81,7 +82,8 @@ void Trainer2::Process(double tau, double upsilon) {
       kstar = k->RemoveRowsReturnMatrix(active_samples);
       astar = new Matrix(a->RemoveElementsReturnVector(active_samples));
       kka_inv = CalculateMiddlePart(kstar, astar);
-      // TODO(jrm): update posteriors
+      UpdateW(kka_inv, kstar);
+      UpdateY();
     } else if (!does_contribute && is_already_in) {
       // TODO(jrm): && length(active_samples) != 1
       // if the sample does not contribute to the model solution and it is
@@ -93,7 +95,8 @@ void Trainer2::Process(double tau, double upsilon) {
       kstar = k->RemoveRowsReturnMatrix(active_samples);
       astar = new Matrix(a->RemoveElementsReturnVector(active_samples));
       kka_inv = CalculateMiddlePart(kstar, astar);
-      // TODO(jrm): update posteriors
+      UpdateW(kka_inv, kstar);
+      UpdateY();
     }
   }
 
