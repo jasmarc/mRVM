@@ -19,8 +19,8 @@ class Trainer2 {
     void Process(double tau, double upsilon);
     double Theta(double i, Matrix *q, Vector *s);
     Matrix *CalculateMiddlePart(Matrix *kstar, Matrix *astar);
-    double CalculateSm(Vector *ki, Matrix *kstar, Matrix *kka_inv);
-    Vector *CalculateQcm(Vector *ki, Matrix *kstar, Matrix *kka_inv);
+    double CalculateSi(Vector *ki, Matrix *kstar, Matrix *kka_inv);
+    Vector *CalculateQi(Vector *ki, Matrix *kstar, Matrix *kka_inv);
     double CalculateAlphaValue();
     Matrix *GetW();
 

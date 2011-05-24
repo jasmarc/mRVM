@@ -53,27 +53,47 @@ void Trainer2::Process(double tau, double upsilon) {
     double ai = a->Get(current_sample_index);
     bool is_already_in = (active_samples->Get(current_sample_index) == 1);
     bool does_contribute;
-    double si = CalculateSm(ki, kstar, kka_inv);
-    Vector *qci = CalculateQcm(ki, kstar, kka_inv);
+    double si = CalculateSi(ki, kstar, kka_inv);
+    Vector *qi = CalculateQi(ki, kstar, kka_inv);
     if (is_already_in) {
       si = ai*si/(ai - si);
-      for (size_t i; i < qci->Size(); ++i) {
-        qci->Set(i, ai*qci->Get(i) / (ai - si));
+      for (size_t i; i < qi->Size(); ++i) {
+        qi->Set(i, ai*qi->Get(i) / (ai - si));
       }
     }
     double qsum2;
-    for (size_t i; i < qci->Size(); ++i) {
-      qsum2 += pow(qci->Get(i), 2.0);
+    for (size_t i; i < qi->Size(); ++i) {
+      qsum2 += pow(qi->Get(i), 2.0);
     }
-    does_contribute = qsum2 > (classes*si);
+    does_contribute = (qsum2 > (classes*si));
     if (does_contribute && is_already_in) {
-      // TODO(jrm): missing code
+      // if the sample does contribute to the model solution and it is
+      // already in the model keep it and update its scales a
+      UpdateA(current_sample_index, si, qi);
+      astar = new Matrix(a->RemoveElementsReturnVector(active_samples));
+      kka_inv = CalculateMiddlePart(kstar, astar);
+      // TODO(jrm): update posteriors
     } else if (does_contribute && !is_already_in) {
-      // TODO(jrm): missing code
+      // if the sample can contribute to the model, but it is not inside
+      // it, we include it.
+      UpdateA(current_sample_index, si, qi);
+      active_samples->Set(current_sample_index, 1);
+      kstar = k->RemoveRowsReturnMatrix(active_samples);
+      astar = new Matrix(a->RemoveElementsReturnVector(active_samples));
+      kka_inv = CalculateMiddlePart(kstar, astar);
+      // TODO(jrm): update posteriors
     } else if (!does_contribute && is_already_in) {
-      // if (length(active_samples) != 1) {
-      // TODO(jrm): missing code
-      // }
+      // TODO(jrm): && length(active_samples) != 1
+      // if the sample does not contribute to the model solution and it is
+      // in the model, we remove it
+      a->Set(current_sample_index, INF);
+      // TODO(jrm): could just leave this alone
+      // w->Set(current_sample_index, 0);
+      active_samples->Set(current_sample_index, 0);
+      kstar = k->RemoveRowsReturnMatrix(active_samples);
+      astar = new Matrix(a->RemoveElementsReturnVector(active_samples));
+      kka_inv = CalculateMiddlePart(kstar, astar);
+      // TODO(jrm): update posteriors
     }
   }
 
@@ -98,7 +118,7 @@ Matrix *Trainer2::CalculateMiddlePart(Matrix *kstar, Matrix *astar) {
   return kka_inv;
 }
 
-double Trainer2::CalculateSm(Vector *ki, Matrix *kstar, Matrix *kka_inv) {
+double Trainer2::CalculateSi(Vector *ki, Matrix *kstar, Matrix *kka_inv) {
   double kiki = ki->Multiply(ki);
   Vector *kikstar = ki->Multiply(kstar);
   Vector *kstarki = kstar->Multiply(ki);
@@ -111,7 +131,7 @@ double Trainer2::CalculateSm(Vector *ki, Matrix *kstar, Matrix *kka_inv) {
   return ret;
 }
 
-Vector *Trainer2::CalculateQcm(Vector *ki, Matrix *kstar, Matrix *kka_inv) {
+Vector *Trainer2::CalculateQi(Vector *ki, Matrix *kstar, Matrix *kka_inv) {
   Vector *kikstar = ki->Multiply(kstar);
   Matrix *kstary = kstar->Multiply(y);
   Vector *temp1 = kikstar->Multiply(kka_inv);
